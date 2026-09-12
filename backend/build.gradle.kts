@@ -34,12 +34,9 @@ dependencies {
 	implementation("org.flywaydb:flyway-mysql")
 	runtimeOnly("com.mysql:mysql-connector-j")
 
-	// 테스트는 MySQL 없이 돌 수 있도록 H2 를 쓴다.
 	testRuntimeOnly("com.h2database:h2")
 
-	// --- Security / Auth (JWT: Nimbus, Spring Security 리소스 서버) ---
-	implementation("org.springframework.boot:spring-boot-starter-security")
-	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+	implementation("org.springframework.security:spring-security-crypto")
 
 	// --- Ops ---
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -53,7 +50,6 @@ dependencies {
 	// --- Test ---
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
-	testImplementation("org.springframework.boot:spring-boot-starter-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
