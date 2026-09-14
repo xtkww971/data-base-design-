@@ -50,3 +50,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 backend/src/main/resources/application-local.yml.example
+
+#python environments
+.env
+.venv
