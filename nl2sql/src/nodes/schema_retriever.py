@@ -1,7 +1,7 @@
 from src.state import GraphState
 from tools.retriever import get_schema
 
-def schema_retiever(state: GraphState) -> GraphState:
+def schema_retiever(state: GraphState):
     """
     질의에 필요한 DB 스키마를 vectordb에서 검색하는 노드
 
@@ -9,7 +9,7 @@ def schema_retiever(state: GraphState) -> GraphState:
         state: GranphState 
 
     Returns:
-        schema_info: 상태 업데이트 
+        schema_info: 스키마 정보 상태 업데이트 
     """
 
     question = state["question"]
