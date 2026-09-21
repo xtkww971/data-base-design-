@@ -1,7 +1,7 @@
 from src.state import GraphState
 from tools.retriever import get_schema
 
-def schema_retiever(state: GraphState):
+def schema_retriever(state: GraphState):
     """
     질의에 필요한 DB 스키마를 vectordb에서 검색하는 노드
 

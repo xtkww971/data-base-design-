@@ -1,7 +1,7 @@
 import pymysql
 
 
-def get_connerction():
+def get_connection():
     connection = pymysql.connect(
         host='',
         port='',
@@ -23,14 +23,14 @@ def validate_sql(generated_query) -> tuple[bool, str]:
     if not generated_query:
         return False, "쿼리가 생성되지 않았습니다."
 
-    if not generated_query.strip().upper().startswith("SELECT", "WITH"):
+    if not generated_query.strip().upper().startswith(("SELECT", "WITH")):
         return False, "오류: SELECT 또는 WITH 로 시작하는 쿼리만 허용됩니다."
 
     if any(word in generated_query for word in keywords):
         return False, "DB를 변경하는 명령어가 포함되어 있습니다."
 
     try:
-        conn = get_connerction()
+        conn = get_connection()
         with conn.cursor() as cursor:
             cursor.execute("EXPLAIN " + generated_query)
 
