@@ -1,8 +1,12 @@
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
 
-_llm = ChatOpenAI(
-    model='gpt-5-mini'
+load_dotenv()
+
+_llm = ChatGroq(
+    model='openai/gpt-oss-120b',
+    temperature=0
 )
 
-def get_llm()->ChatOpenAI:
+def get_llm():
     return _llm
