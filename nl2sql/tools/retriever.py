@@ -1,11 +1,23 @@
 import json 
 import chromadb
+from chromadb.utils import embedding_functions
 
 chroma_client = chromadb.PersistentClient(path="./vectordb")
 
+bge_m3_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+    model_name="BAAI/bge-m3"
+)
+
 #collection 생셩(DB의 테이블 같은 개념)
-schema_collection = chroma_client.get_or_create_collection(name="schema_collection")
-fewshot_collection = chroma_client.get_or_create_collection(name="fewshot_collection")
+schema_collection = chroma_client.get_or_create_collection(
+    name="schema_collection",
+    embedding_function=bge_m3_ef
+)
+fewshot_collection = chroma_client.get_or_create_collection(
+    name="fewshot_collection",
+    embedding_function=bge_m3_ef
+)
+
 
 
 
@@ -13,9 +25,10 @@ def init_vector_db_if_need():
     """vectordata 생성 함수, 프로그램 실행 처음에만 실행한다."""
 
     schema_count = schema_collection.count()
-    fewshot_couunt = fewshot_collection.count()
+    fewshot_count = fewshot_collection.count()
 
-    if schema_collection == 0 or fewshot_collection == 0:
+    if schema_count == 0 or fewshot_count == 0:
+        print("vector db 생성")
 
         #스키마 데이터 임베딩
         with open("data/schema_docs.json", "r", encoding="utf-8") as f:
@@ -31,7 +44,7 @@ def init_vector_db_if_need():
             for i , fs in enumerate(few_shots):
                 fewshot_collection.upsert(
                     documents=[fs["question"]],
-                    metadatas=[{"query": fs["query"]}],
+                    metadatas=[{"query": fs["sql"]}],
                     ids=[f"fewshot_{i}"]
                 )
 
