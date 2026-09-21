@@ -14,6 +14,8 @@ SYSTEM_PROMPT = """당신은 숙력된 SQL 엔지니어 입니다. 주어진 스
 1. INSERT/UPDATE/DELETE/DROP 등은 절대 사용하지 마세요.
 2. 스키마에 없는 테이블/컬럼명을 지어내지 마세요.
 3. 결과행이 많더라도 LIMIT은 사용하지 마세요.
+4. 출력은 반드시 json 형태로 출력하세요
+5. 만약 테이블 이름이나 컬럼명(스키마) 정보가 부족하여 SQL을 생성할 수 없다면 'sql' 필드에 "스키마 정보 부족"문자열을 담으세요"
 """
 
 RETRY_PROMPT = """이전에 생성한 쿼리에 문제가 발생하였습니다. 오류를 참고해서 수정하세요
@@ -50,9 +52,14 @@ def query_generator(state: GraphState):
             error_msg = error
         )))
 
-    prompt = ChatPromptTemplate.from_messages(message)
-    result : SQLGenerationResult = get_llm().invoke(prompt)
-    
+    chain = ChatPromptTemplate.from_messages(message) | get_llm().with_structured_output(SQLGenerationResult, method="json_mode")
+
+    result : SQLGenerationResult = chain.invoke({
+        "schema_info": schema,
+        "few_shot_examples": example,
+        "question": question
+    })
+
     return {
         "query" : result.sql,
         "retry_count" : state["retry_count"] + 1,
