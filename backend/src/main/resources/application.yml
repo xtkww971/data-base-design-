@@ -17,11 +17,6 @@ spring:
         format_sql: true
         default_batch_fetch_size: 100
 
-app:
-  jwt:
-    secret: ${APP_JWT_SECRET:local-dev-only-secret-key-please-change-me-32bytes+}
-    expire-seconds: ${APP_JWT_EXPIRE_SECONDS:3600}
-
 management:
   endpoints:
     web:
