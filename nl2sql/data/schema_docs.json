@@ -1,0 +1,44 @@
+[
+  {
+    "table": "members",
+    "description": "서비스 회원 기본 정보",
+    "columns": [
+      {"name": "id", "type": "INTEGER", "description": "회원 고유 번호, PK"},
+      {"name": "name", "type": "TEXT", "description": "회원 이름"},
+      {"name": "email", "type": "TEXT", "description": "이메일 주소"},
+      {"name": "grade", "type": "TEXT", "description": "회원 등급 (BASIC, GOLD, VIP)"},
+      {"name": "joined_at", "type": "TEXT", "description": "가입일시 YYYY-MM-DD HH:MM:SS"}
+    ]
+  },
+  {
+    "table": "orders",
+    "description": "회원이 생성한 주문 내역",
+    "columns": [
+      {"name": "id", "type": "INTEGER", "description": "주문 번호, PK"},
+      {"name": "member_id", "type": "INTEGER", "description": "주문한 회원 id, members.id 참조"},
+      {"name": "total_price", "type": "INTEGER", "description": "주문 총 결제 금액(원), 매출 계산에 사용"},
+      {"name": "status", "type": "TEXT", "description": "주문 상태 (PAID, CANCELED, REFUNDED)"},
+      {"name": "ordered_at", "type": "TEXT", "description": "주문일시 YYYY-MM-DD HH:MM:SS"}
+    ]
+  },
+  {
+    "table": "products",
+    "description": "판매 상품 목록",
+    "columns": [
+      {"name": "id", "type": "INTEGER", "description": "상품 번호, PK"},
+      {"name": "name", "type": "TEXT", "description": "상품명"},
+      {"name": "category", "type": "TEXT", "description": "상품 카테고리"},
+      {"name": "price", "type": "INTEGER", "description": "상품 단가(원)"}
+    ]
+  },
+  {
+    "table": "order_items",
+    "description": "주문에 포함된 개별 상품 항목",
+    "columns": [
+      {"name": "id", "type": "INTEGER", "description": "항목 번호, PK"},
+      {"name": "order_id", "type": "INTEGER", "description": "주문 id, orders.id 참조"},
+      {"name": "product_id", "type": "INTEGER", "description": "상품 id, products.id 참조"},
+      {"name": "quantity", "type": "INTEGER", "description": "구매 수량"}
+    ]
+  }
+]

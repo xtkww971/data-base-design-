@@ -1,0 +1,22 @@
+[
+  {
+    "question": "가장 최근에 가입한 회원 5명의 이름을 알려줘",
+    "sql": "SELECT name FROM members ORDER BY joined_at DESC LIMIT 5"
+  },
+  {
+    "question": "VIP 등급 회원은 몇 명이야?",
+    "sql": "SELECT COUNT(*) AS vip_count FROM members WHERE grade = 'VIP'"
+  },
+  {
+    "question": "이번 달 총 매출을 알려줘",
+    "sql": "SELECT SUM(total_price) AS revenue FROM orders WHERE status = 'PAID' AND strftime('%Y-%m', ordered_at) = strftime('%Y-%m', 'now')"
+  },
+  {
+    "question": "가장 많이 팔린 상품 3개는?",
+    "sql": "SELECT p.name, SUM(oi.quantity) AS total_qty FROM order_items oi JOIN products p ON p.id = oi.product_id GROUP BY p.id ORDER BY total_qty DESC LIMIT 3"
+  },
+  {
+    "question": "회원별 총 구매 금액을 많은 순으로 보여줘",
+    "sql": "SELECT m.name, SUM(o.total_price) AS total_spent FROM members m JOIN orders o ON o.member_id = m.id WHERE o.status = 'PAID' GROUP BY m.id ORDER BY total_spent DESC"
+  }
+]
