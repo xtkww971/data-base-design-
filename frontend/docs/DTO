@@ -1,0 +1,41 @@
+로그인 DTO
+```
+public class LoginRequestDto {
+
+    @NotBlank(message = "아이디(또는 이메일)는 필수 입력 항목입니다.")
+    private String username; // 또는 email
+
+    @NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
+    private String password;
+}
+```
+
+쿼리 DTO
+```
+public class ProductSearchQueryDto {
+
+    // 카테고리 필터 (예: "ALL", "CPU", "RAM", "GPU" 등)
+    private String category;
+
+    // 검색어 키워드 (제품명, 브랜드 등 통합 검색용)
+    private String searchTerm;
+    
+    // 대량 데이터 조회를 위한 페이징 정보 
+    private Integer page = 0; //현재 페이지 수
+    private Integer size = 20; // 한 페이지 안의 카드 개수
+}
+```
+AI 프롬프트 이용시 Request DTO
+```
+public class AiRecommendationRequest {
+
+@NotBlank(message = "견적 요청 내용을 입력해주세요.")  // 견적을 입력하지 않고 그냥 버튼 클릭시.
+@Size(max = 1000, message = "요청 내용은 1000자 이하로 입력해주세요.") // 사용자가 겁나 길게 프롬프트 입력시
+private String prompt; // 예: "300만원 안팎의 예산으로 컴퓨터 견적 맞춰줘."
+
+}
+```
+프롬프트만  있으면 될듯 날짜나 내용도 보내야 하나? - > 토큰 여부를 백엔드에서 물어봐야한대
+
+로그인 토큰(JWT, Session)을 사용할 때 추가 DTO 필요 없음
+토큰 없이 유저 고유 고유 ID를 직접 넘길 때 확장형 DTO 필요
