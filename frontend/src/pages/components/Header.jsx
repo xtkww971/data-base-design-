@@ -5,7 +5,7 @@ import logoImage from '../../assets/logo.png';
 
 const NAV_ITEMS = [
   { label: '추천 견적', path: '/recommendation' },
-  { label: '견적 검색', path: '/' },
+  { label: '견적 검색', path: '/search' },
 ];
 
 export default function Header() {

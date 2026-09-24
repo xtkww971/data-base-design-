@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import './index.css';
 import Mainpage from './pages/MainPage.jsx';
 import RecommendationPage from './pages/RecommendationPage.jsx';
+import SearchPage from './pages/SearchPage.jsx';
 
 function AppRoutes() {
   const location = useLocation();
@@ -11,6 +12,7 @@ function AppRoutes() {
       <Routes location={location}>
         <Route path="/" element={<Mainpage />} />
         <Route path="/recommendation" element={<RecommendationPage />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
