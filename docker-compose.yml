@@ -1,0 +1,73 @@
+name: data-base-design
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: dbd-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-data_base_design}
+      MYSQL_USER: ${MYSQL_USER:-app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-app}
+      TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    profiles: ["app"]
+    build:
+      context: ./backend
+    container_name: dbd-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-data_base_design}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-app}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-app}
+      # 백엔드 → 자연어 처리 서비스 호출 주소 (연결 시 사용)
+      NL2SQL_BASE_URL: http://nl2sql:8000
+      TZ: Asia/Seoul
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+
+  nl2sql:
+    profiles: ["app"]
+    build:
+      context: ./nl2sql
+    container_name: dbd-nl2sql
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-data_base_design}
+      DB_USER: ${MYSQL_USER:-app}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-app}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      TZ: Asia/Seoul
+    expose:
+      - "8000"
+    volumes:
+      - ./vectordb:/app/vectordb
+      - hf-cache:/root/.cache/huggingface
+
+volumes:
+  mysql-data:
+  hf-cache:
