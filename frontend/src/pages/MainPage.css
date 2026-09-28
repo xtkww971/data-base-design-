@@ -108,20 +108,6 @@
   box-shadow: 0 0 16px rgba(125, 211, 252, 0.18);
 }
 
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 10;
-  width: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-bottom: 1px solid #1a1a1a;
-}
-
-.header__search-panel {
-  z-index: 3;
-}
-
 @keyframes fadeInUp {
   0% {
     opacity: 0;

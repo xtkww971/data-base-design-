@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import './SearchPage.css';
-import {
-  mockProductDetails,
-  PRODUCT_CATEGORIES,
-} from '../types/productDetail.ts';
+import { PRODUCT_CATEGORIES } from '../types/productDetail.ts';
+import { searchProducts } from '../api/productApi.js';
+
+const PAGE_SIZE = 20;
+const SEARCH_DEBOUNCE_MS = 300;
 
 const formatPrice = (price) => `₩ ${new Intl.NumberFormat('ko-KR').format(price)}`;
 
@@ -158,29 +159,81 @@ const getSpecEntries = (product) => {
 export default function SearchPage() {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProductId, setSelectedProductId] = useState(mockProductDetails[0].id);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState(null);
 
-  const filteredProducts = useMemo(() => {
-    const normalized = searchTerm.trim().toLowerCase();
+  // 마지막으로 받은 검색 결과. queryKey 가 현재 검색 조건과 다르면 새 결과를 기다리는 중이다.
+  const [searchResult, setSearchResult] = useState(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-    return mockProductDetails.filter((product) => {
-      const matchesCategory =
-        selectedCategory === 'ALL' || product.category === selectedCategory;
+  const queryKey = `${selectedCategory}|${debouncedSearchTerm}`;
+  const currentResult = searchResult?.queryKey === queryKey ? searchResult : null;
+  const products = currentResult?.products ?? [];
+  const hasNext = currentResult?.hasNext ?? false;
+  const totalElements = currentResult?.totalElements ?? 0;
+  const errorMessage = currentResult?.errorMessage ?? null;
+  const isLoading = currentResult === null || isLoadingMore;
 
-      const matchesSearch =
-        normalized.length === 0 ||
-        product.name.toLowerCase().includes(normalized) ||
-        product.brand.toLowerCase().includes(normalized) ||
-        product.category.toLowerCase().includes(normalized);
+  // 타이핑할 때마다 요청하지 않도록 입력이 멈춘 뒤에 검색어를 반영한다.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-      return matchesCategory && matchesSearch;
-    });
-  }, [searchTerm, selectedCategory]);
+  // 카테고리나 검색어가 바뀌면 첫 페이지부터 다시 읽어온다.
+  useEffect(() => {
+    const controller = new AbortController();
+
+    searchProducts(
+      { category: selectedCategory, searchTerm: debouncedSearchTerm, page: 0, size: PAGE_SIZE },
+      controller.signal,
+    )
+      .then((result) => {
+        setSearchResult({
+          queryKey,
+          products: result.content,
+          page: result.page,
+          hasNext: result.hasNext,
+          totalElements: result.totalElements,
+          errorMessage: null,
+        });
+      })
+      .catch((error) => {
+        if (error.name === 'AbortError') return;
+        setSearchResult({ queryKey, products: [], page: 0, hasNext: false, totalElements: 0, errorMessage: error.message });
+      });
+
+    return () => controller.abort();
+  }, [queryKey, selectedCategory, debouncedSearchTerm]);
+
+  const handleLoadMore = () => {
+    if (!currentResult) return;
+    const nextPage = currentResult.page + 1;
+    setIsLoadingMore(true);
+
+    searchProducts({ category: selectedCategory, searchTerm: debouncedSearchTerm, page: nextPage, size: PAGE_SIZE })
+      .then((result) => {
+        // 그사이 검색 조건이 바뀌었다면 이전 조건의 결과는 버린다.
+        setSearchResult((prev) =>
+          prev?.queryKey !== queryKey
+            ? prev
+            : {
+                ...prev,
+                products: [...prev.products, ...result.content],
+                page: result.page,
+                hasNext: result.hasNext,
+                totalElements: result.totalElements,
+              },
+        );
+      })
+      .catch((error) => {
+        setSearchResult((prev) => (prev?.queryKey !== queryKey ? prev : { ...prev, errorMessage: error.message }));
+      })
+      .finally(() => setIsLoadingMore(false));
+  };
 
   const selectedProduct =
-    filteredProducts.find((product) => product.id === selectedProductId) ||
-    mockProductDetails.find((product) => product.id === selectedProductId) ||
-    mockProductDetails[0];
+    products.find((product) => product.id === selectedProductId) || products[0] || null;
 
   return (
     <div className="search-page">
@@ -215,23 +268,30 @@ export default function SearchPage() {
               type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="제품명, 브랜드, 카테고리를 검색하세요"
+              placeholder="제품명, 브랜드를 검색하세요"
             />
           </label>
 
           <div className="search-page__layout">
             <div className="search-page__results">
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
+              {errorMessage ? (
+                <div className="search-page__empty-state">
+                  제품 정보를 불러오지 못했습니다.
+                  <br />
+                  {errorMessage}
+                </div>
+              ) : isLoading && products.length === 0 ? (
+                <div className="search-page__empty-state">제품 정보를 불러오는 중입니다...</div>
+              ) : products.length > 0 ? (
+                products.map((product) => (
                   <button
                     key={product.id}
                     type="button"
-                    className={`search-page__card ${selectedProduct.id === product.id ? 'is-selected' : ''}`}
+                    className={`search-page__card ${selectedProduct?.id === product.id ? 'is-selected' : ''}`}
                     onClick={() => setSelectedProductId(product.id)}
                   >
-                    <div className="search-page__card-image-wrap">
-                      <img src={product.imageUrl} alt={product.name} className="search-page__card-image" />
-                    </div>
+                    {/* 제품 이미지는 아직 없어서 검정 박스로 대신한다. */}
+                    <div className="search-page__card-image-wrap" aria-hidden="true" />
 
                     <div className="search-page__card-body">
                       <div className="search-page__card-meta">
@@ -256,39 +316,50 @@ export default function SearchPage() {
                   다른 카테고리 또는 키워드를 입력해 보세요.
                 </div>
               )}
+
+              {!errorMessage && hasNext && (
+                <button
+                  type="button"
+                  className="search-page__load-more"
+                  onClick={handleLoadMore}
+                  disabled={isLoading}
+                >
+                  {isLoading ? '불러오는 중...' : `더 보기 (${products.length} / ${totalElements})`}
+                </button>
+              )}
             </div>
 
-            <aside className="search-page__detail">
-              <div className="search-page__detail-image-wrap">
-                <img src={selectedProduct.imageUrl} alt={selectedProduct.name} className="search-page__detail-image" />
-              </div>
+            {selectedProduct && (
+              <aside className="search-page__detail">
+                <div className="search-page__detail-image-wrap" aria-hidden="true" />
 
-              <div className="search-page__detail-header">
-                <span className="search-page__category-tag">{selectedProduct.category}</span>
-                <span className="search-page__detail-brand">{selectedProduct.brand}</span>
-              </div>
+                <div className="search-page__detail-header">
+                  <span className="search-page__category-tag">{selectedProduct.category}</span>
+                  <span className="search-page__detail-brand">{selectedProduct.brand}</span>
+                </div>
 
-              <h2>{selectedProduct.name}</h2>
-              <div className="search-page__detail-price">{formatPrice(selectedProduct.price)}</div>
+                <h2>{selectedProduct.name}</h2>
+                <div className="search-page__detail-price">{formatPrice(selectedProduct.price)}</div>
 
-              <div className="search-page__spec-list">
-                {getSpecEntries(selectedProduct).map(([label, value]) => (
-                  <div key={label} className="search-page__spec-item">
-                    <span>{label}</span>
-                    <strong>{value}</strong>
-                  </div>
-                ))}
-              </div>
+                <div className="search-page__spec-list">
+                  {getSpecEntries(selectedProduct).map(([label, value]) => (
+                    <div key={label} className="search-page__spec-item">
+                      <span>{label}</span>
+                      <strong>{value}</strong>
+                    </div>
+                  ))}
+                </div>
 
-              <div className="search-page__detail-actions">
-                <button type="button" className="search-page__primary-button">
-                  견적에 추가
-                </button>
-                <button type="button" className="search-page__secondary-button">
-                  비교하기
-                </button>
-              </div>
-            </aside>
+                <div className="search-page__detail-actions">
+                  <button type="button" className="search-page__primary-button">
+                    견적에 추가
+                  </button>
+                  <button type="button" className="search-page__secondary-button">
+                    비교하기
+                  </button>
+                </div>
+              </aside>
+            )}
           </div>
         </section>
       </main>

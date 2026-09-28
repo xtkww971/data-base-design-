@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './Header.css';
 import logoImage from '../../assets/logo.png';
+import { clearCurrentUser, useCurrentUser } from '../../auth/authStore.js';
 
 const NAV_ITEMS = [
   { label: '추천 견적', path: '/recommendation' },
@@ -11,6 +12,14 @@ const NAV_ITEMS = [
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const currentUser = useCurrentUser();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+
+  const handleLoginClick = () => {
+    // 로그인 후 지금 보던 페이지로 돌아오도록 현재 경로를 넘긴다.
+    navigate('/login', { state: isAuthPage ? undefined : { from: location.pathname } });
+  };
 
   const handleLogoClick = () => {
     window.location.href = '/';
@@ -66,9 +75,18 @@ export default function Header() {
             </svg>
           </button>
 
-          <button type="button" className="header__login">
-            로그인
-          </button>
+          {currentUser ? (
+            <>
+              <span className="header__user">{currentUser.nickname}님</span>
+              <button type="button" className="header__login" onClick={clearCurrentUser}>
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <button type="button" className="header__login" onClick={handleLoginClick}>
+              로그인
+            </button>
+          )}
         </div>
       </div>
 

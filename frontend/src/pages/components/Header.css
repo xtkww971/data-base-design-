@@ -4,9 +4,13 @@
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 10;
+  /* 본문(사이드바 토글 z-index 40 등)보다 항상 위에 있도록 */
+  z-index: 100;
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  /* 고정 헤더라 스크롤 시 본문이 밑으로 지나간다. 배경이 옅으면 글자가 비쳐 겹쳐 보이므로 거의 불투명하게 + 블러 */
+  background-color: rgba(10, 16, 32, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid #484848;
 }
 
@@ -159,6 +163,16 @@
   transform: translateY(-1px);
   filter: brightness(1.08);
   opacity: 0.9;
+}
+
+.header__user {
+  color: #7dd3fc;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header__search-panel {
