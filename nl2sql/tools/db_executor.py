@@ -1,14 +1,23 @@
+import os
+
 import pymysql
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def get_connection():
+    """
+    Docker(nl2sql 컨테이너)에서는 compose가 넣어주는 DB_* 변수를 사용하고,
+    로컬 실행 시에는 루트 .env 의 MYSQL_* 값으로 localhost 에 접속
+    """
     connection = pymysql.connect(
-        host='',
-        port='',
-        user='',
-        password='',
-        db='',
-        charset=''
+        host=os.getenv('DB_HOST', '127.0.0.1'),
+        port=int(os.getenv('DB_PORT', os.getenv('MYSQL_PORT', '3307'))),
+        user=os.getenv('DB_USER', os.getenv('MYSQL_USER', 'app')),
+        password=os.getenv('DB_PASSWORD', os.getenv('MYSQL_PASSWORD', 'app')),
+        db=os.getenv('DB_NAME', os.getenv('MYSQL_DATABASE', 'data_base_design')),
+        charset='utf8mb4'
     )
     return connection
 
