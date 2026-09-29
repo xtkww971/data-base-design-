@@ -1,44 +1,125 @@
 [
   {
-    "table": "members",
-    "description": "서비스 회원 기본 정보",
+    "table": "categories",
+    "description": "부품 카테고리",
     "columns": [
-      {"name": "id", "type": "INTEGER", "description": "회원 고유 번호, PK"},
-      {"name": "name", "type": "TEXT", "description": "회원 이름"},
-      {"name": "email", "type": "TEXT", "description": "이메일 주소"},
-      {"name": "grade", "type": "TEXT", "description": "회원 등급 (BASIC, GOLD, VIP)"},
-      {"name": "joined_at", "type": "TEXT", "description": "가입일시 YYYY-MM-DD HH:MM:SS"}
+      {"name": "category_id", "type": "INTEGER", "description": "카테고리 고유 번호, PK"},
+      {"name": "category_name", "type": "TEXT", "description": "카테고리 이름. CPU, MAINBOARD, RAM, GPU, POWER, SSD, HDD, MONITOR 8개 고정값"}
     ]
   },
   {
-    "table": "orders",
-    "description": "회원이 생성한 주문 내역",
+    "table": "modules",
+    "description": "부품 공통 정보. 제품명·제조사·가격은 이 테이블에만 있으므로 부품 조회 시 항상 조인",
     "columns": [
-      {"name": "id", "type": "INTEGER", "description": "주문 번호, PK"},
-      {"name": "member_id", "type": "INTEGER", "description": "주문한 회원 id, members.id 참조"},
-      {"name": "total_price", "type": "INTEGER", "description": "주문 총 결제 금액(원), 매출 계산에 사용"},
-      {"name": "status", "type": "TEXT", "description": "주문 상태 (PAID, CANCELED, REFUNDED)"},
-      {"name": "ordered_at", "type": "TEXT", "description": "주문일시 YYYY-MM-DD HH:MM:SS"}
+      {"name": "module_id", "type": "INTEGER", "description": "부품 고유 번호, PK. 모든 상세 테이블이 이 값을 PK 겸 FK로 참조"},
+      {"name": "category_id", "type": "INTEGER", "description": "카테고리 번호, categories.category_id 참조"},
+      {"name": "name", "type": "TEXT", "description": "제품명. 예: AMD 라이젠5 5세대 7500F"},
+      {"name": "brand", "type": "TEXT", "description": "제조사. 예: AMD, 인텔, 삼성전자, MSI, ASUS, WD, Seagate"},
+      {"name": "price", "type": "INTEGER", "description": "최저가. 원 단위 정수 (150만원 → 1500000)"},
+      {"name": "image_url", "type": "TEXT", "description": "제품 이미지 URL. 유일하게 NULL 허용"}
     ]
   },
   {
-    "table": "products",
-    "description": "판매 상품 목록",
+    "table": "cpus",
+    "description": "CPU 상세 정보",
     "columns": [
-      {"name": "id", "type": "INTEGER", "description": "상품 번호, PK"},
-      {"name": "name", "type": "TEXT", "description": "상품명"},
-      {"name": "category", "type": "TEXT", "description": "상품 카테고리"},
-      {"name": "price", "type": "INTEGER", "description": "상품 단가(원)"}
+      {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
+      {"name": "socket", "type": "TEXT", "description": "소켓 규격. 메인보드 호환 판정 기준 (LGA1700, AM5, AM4, LGA1851)"},
+      {"name": "cores", "type": "INTEGER", "description": "코어 수 (4~24)"},
+      {"name": "threads", "type": "INTEGER", "description": "스레드 수 (8~32)"},
+      {"name": "has_graphics", "type": "BIT", "description": "내장 그래픽 유무 (1=있음, 0=없음)"},
+      {"name": "clock_speed", "type": "TEXT", "description": "동작 클럭 문자열 (2.1GHz~4.7GHz). 문자열이라 수치 비교 불가"}
     ]
   },
   {
-    "table": "order_items",
-    "description": "주문에 포함된 개별 상품 항목",
+    "table": "main_boards",
+    "description": "메인보드 상세 정보",
     "columns": [
-      {"name": "id", "type": "INTEGER", "description": "항목 번호, PK"},
-      {"name": "order_id", "type": "INTEGER", "description": "주문 id, orders.id 참조"},
-      {"name": "product_id", "type": "INTEGER", "description": "상품 id, products.id 참조"},
-      {"name": "quantity", "type": "INTEGER", "description": "구매 수량"}
+      {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
+      {"name": "socket", "type": "TEXT", "description": "지원 소켓. CPU 호환 판정 기준 (LGA1700, AM5, AM4, LGA1851)"},
+      {"name": "form_factor", "type": "TEXT", "description": "보드 크기 (ATX, M-ATX, M-ITX)"},
+      {"name": "memory_spec", "type": "TEXT", "description": "지원 메모리 규격. RAM 호환 판정 기준 (DDR5, DDR4)"},
+      {"name": "memory_slots", "type": "INTEGER", "description": "메모리 슬롯 개수 (2 또는 4)"},
+      {"name": "chipset", "type": "TEXT", "description": "칩셋명. AMD계: A520, A620, B550, B650, B650E, B850, X570, X670E, X870, X870E / 인텔계: H610, B760, B860, Z790, Z890"}
+    ]
+  },
+  {
+    "table": "rams",
+    "description": "램 상세 정보",
+    "columns": [
+      {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
+      {"name": "memory_spec", "type": "TEXT", "description": "메모리 규격 (DDR5, DDR4)"},
+      {"name": "capacity", "type": "INTEGER", "description": "표기 용량, 단위 GB (8, 16, 32, 64)"},
+      {"name": "clock", "type": "INTEGER", "description": "동작 클럭, 단위 MHz (3200~7200)"},
+      {"name": "package_count", "type": "INTEGER", "description": "패키지 개수 (1=단품, 2=듀얼 구성)"}
+    ]
+  },
+  {
+    "table": "graphic_cards",
+    "description": "그래픽카드 상세 정보",
+    "columns": [
+      {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
+      {"name": "chipset", "type": "TEXT", "description": "칩셋 그룹. 제조사 접두어 포함. 예: GeForce RTX 5070, Radeon RX 7800 XT, Arc B580"},
+      {"name": "memory_type", "type": "TEXT", "description": "VRAM 종류 (GDDR6, GDDR6X, GDDR7)"},
+      {"name": "memory_capacity", "type": "INTEGER", "description": "VRAM 용량, 단위 GB (8~32)"},
+      {"name": "length_mm", "type": "INTEGER", "description": "가로 길이, 단위 mm (236~386). 케이스 장착 공간 확인용"},
+      {"name": "recommended_power", "type": "INTEGER", "description": "권장 파워 용량, 단위 W (550~1000). 파워 호환 판정 기준이며 카드 자체 소비전력이 아님"},
+      {"name": "ports", "type": "TEXT", "description": "출력 단자 서술 문자열. 예: HDMI 2.1 x1, DP 1.4a x3"}
+    ]
+  },
+  {
+    "table": "power",
+    "description": "파워 상세 정보 (테이블명이 단수인 점에 주의)",
+    "columns": [
+      {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
+      {"name": "rated_power", "type": "INTEGER", "description": "정격 출력, 단위 W (500~1200)"},
+      {"name": "certification", "type": "TEXT", "description": "80PLUS 인증 등급 (80PLUS STANDARD, 80PLUS BRONZE, 80PLUS SILVER, 80PLUS GOLD, 80PLUS PLATINUM, 80PLUS TITANIUM). 접두어 포함 대문자"},
+      {"name": "form_factor", "type": "TEXT", "description": "파워 규격 (ATX, SFX)"}
+    ]
+  },
+  {
+    "table": "ssds",
+    "description": "SSD 상세 정보",
+    "columns": [
+      {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
+      {"name": "form_factor", "type": "TEXT", "description": "규격 (M.2 2280, 2.5인치)"},
+      {"name": "capacity", "type": "INTEGER", "description": "용량, 단위 GB (250, 500, 1000, 2000, 4000)"},
+      {"name": "read_speed", "type": "INTEGER", "description": "순차 읽기 속도, 단위 MB/s (560~14900)"},
+      {"name": "write_speed", "type": "INTEGER", "description": "순차 쓰기 속도, 단위 MB/s (340~14000)"}
+    ]
+  },
+  {
+    "table": "hdds",
+    "description": "HDD 상세 정보",
+    "columns": [
+      {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
+      {"name": "interface_type", "type": "TEXT", "description": "인터페이스. 현재 전부 SATA3 (컬럼명이 interface가 아님에 주의)"},
+      {"name": "capacity", "type": "INTEGER", "description": "용량, 단위 TB (1~24). SSD와 단위가 다름"},
+      {"name": "rpm", "type": "INTEGER", "description": "회전수, 단위 RPM (5400 또는 7200)"},
+      {"name": "buffer_memory", "type": "INTEGER", "description": "버퍼 용량, 단위 MB (64, 256, 512)"}
+    ]
+  },
+  {
+    "table": "monitors",
+    "description": "모니터 상세 정보",
+    "columns": [
+      {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
+      {"name": "screen_size", "type": "DECIMAL(3,1)", "description": "화면 크기, 단위 인치 (23.8~49.0, 소수 한 자리)"},
+      {"name": "resolution", "type": "TEXT", "description": "해상도 (1920x1080, 2560x1440, 3440x1440, 3840x2160, 5120x1440). 공백 없음"},
+      {"name": "panel_type", "type": "TEXT", "description": "패널 종류 (IPS, Fast IPS, VA, OLED, TN)"},
+      {"name": "refresh_rate", "type": "INTEGER", "description": "주사율, 단위 Hz (60~360)"},
+      {"name": "aspect_ratio", "type": "TEXT", "description": "화면 비율 (16:9, 21:9, 32:9)"}
+    ]
+  },
+  {
+    "table": "users",
+    "description": "유저 정보. 부품과 관계 없는 독립 테이블",
+    "columns": [
+      {"name": "user_id", "type": "INTEGER", "description": "유저 고유 번호, PK"},
+      {"name": "login_id", "type": "TEXT", "description": "로그인 아이디. 중복 불가"},
+      {"name": "password", "type": "TEXT", "description": "BCrypt 해시. 조회 대상에 넣지 않는다"},
+      {"name": "nickname", "type": "TEXT", "description": "화면 표시용 닉네임"},
+      {"name": "created_at", "type": "DATETIME", "description": "가입 시각"}
     ]
   }
 ]
