@@ -13,6 +13,7 @@ def route_after_validation(state: GraphState)-> str:
     if state.get("error") == "":
         return "end"
     if state.get("retry_count") >= MAX_RETRY:
+        state["query"] = "쿼리를 생성할 수 없습니다"
         return "end"
     return "retry"
 
