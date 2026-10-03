@@ -80,6 +80,6 @@ def query_generator(state: GraphState):
     return {
         "query" : result.sql,
         "retry_count" : state["retry_count"] + 1,
-        "error": result.error
+        "error": ""
     }
 
