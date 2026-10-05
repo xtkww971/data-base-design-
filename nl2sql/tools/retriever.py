@@ -53,7 +53,7 @@ def get_schema(question: str) -> str:
     """질문과 연관된 스키마 정보를 반환"""
     results = schema_collection.query(
         query_texts=[question],
-        n_results= 3
+        n_results= 5
     )
 
     docs = results.get("documents", [[]])[0]
