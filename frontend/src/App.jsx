@@ -4,6 +4,7 @@ import Mainpage from './pages/MainPage.jsx';
 import RecommendationPage from './pages/RecommendationPage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import CartPage from './pages/CartPage.jsx';
+import MyPage from './pages/MyPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import SignUpPage from './pages/SignUpPage.jsx';
 
@@ -17,6 +18,7 @@ function AppRoutes() {
         <Route path="/recommendation" element={<RecommendationPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/mypage" element={<MyPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
