@@ -168,10 +168,12 @@ export default function SearchPage() {
 
   const queryKey = `${selectedCategory}|${debouncedSearchTerm}`;
   const currentResult = searchResult?.queryKey === queryKey ? searchResult : null;
-  const products = currentResult?.products ?? [];
-  const hasNext = currentResult?.hasNext ?? false;
-  const totalElements = currentResult?.totalElements ?? 0;
-  const errorMessage = currentResult?.errorMessage ?? null;
+  // 새 결과가 올 때까지 이전 결과를 그대로 보여준다. 목록을 비우면 페이지 높이가 줄어 푸터가 튀어 오른다.
+  const isRefreshing = searchResult !== null && currentResult === null;
+  const products = searchResult?.products ?? [];
+  const hasNext = searchResult?.hasNext ?? false;
+  const totalElements = searchResult?.totalElements ?? 0;
+  const errorMessage = searchResult?.errorMessage ?? null;
   const isLoading = currentResult === null || isLoadingMore;
 
   // 타이핑할 때마다 요청하지 않도록 입력이 멈춘 뒤에 검색어를 반영한다.
@@ -272,7 +274,7 @@ export default function SearchPage() {
             />
           </label>
 
-          <div className="search-page__layout">
+          <div className={`search-page__layout ${isRefreshing ? 'is-refreshing' : ''}`} aria-busy={isRefreshing}>
             <div className="search-page__results">
               {errorMessage ? (
                 <div className="search-page__empty-state">
