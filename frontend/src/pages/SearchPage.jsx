@@ -4,6 +4,28 @@ import Footer from './components/Footer.jsx';
 import './SearchPage.css';
 import { PRODUCT_CATEGORIES } from '../types/productDetail.ts';
 import { searchProducts } from '../api/productApi.js';
+import dummyCpuImage from '../assets/dummy_cpu.webp';
+import dummyMainboardImage from '../assets/dummy_motherbored.webp';
+import dummyRamImage from '../assets/dummy_ram.jpg';
+import dummyGpuImage from '../assets/dummy_gpu.jpg';
+import dummyPowerImage from '../assets/dummy_power.webp';
+import dummySsdImage from '../assets/dummy_ssd.jpg';
+import dummyHddImage from '../assets/dummy_hdd.webp';
+import dummyMonitorImage from '../assets/dummy_monitor.jpg';
+
+// 제품 이미지가 없을 때 카테고리별로 대신 보여주는 더미 이미지.
+const DUMMY_IMAGES = {
+  CPU: dummyCpuImage,
+  MAINBOARD: dummyMainboardImage,
+  RAM: dummyRamImage,
+  GPU: dummyGpuImage,
+  POWER: dummyPowerImage,
+  SSD: dummySsdImage,
+  HDD: dummyHddImage,
+  MONITOR: dummyMonitorImage,
+};
+
+const getProductImage = (product) => product.imageUrl || DUMMY_IMAGES[product.category] || null;
 
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -292,8 +314,12 @@ export default function SearchPage() {
                     className={`search-page__card ${selectedProduct?.id === product.id ? 'is-selected' : ''}`}
                     onClick={() => setSelectedProductId(product.id)}
                   >
-                    {/* 제품 이미지는 아직 없어서 검정 박스로 대신한다. */}
-                    <div className="search-page__card-image-wrap" aria-hidden="true" />
+                    {/* 이미지를 못 찾은 제품은 검정 박스로 남는다. */}
+                    <div className="search-page__card-image-wrap" aria-hidden="true">
+                      {getProductImage(product) && (
+                        <img className="search-page__image" src={getProductImage(product)} alt="" loading="lazy" />
+                      )}
+                    </div>
 
                     <div className="search-page__card-body">
                       <div className="search-page__card-meta">
@@ -333,7 +359,11 @@ export default function SearchPage() {
 
             {selectedProduct && (
               <aside className="search-page__detail">
-                <div className="search-page__detail-image-wrap" aria-hidden="true" />
+                <div className="search-page__detail-image-wrap" aria-hidden="true">
+                  {getProductImage(selectedProduct) && (
+                    <img className="search-page__image" src={getProductImage(selectedProduct)} alt="" />
+                  )}
+                </div>
 
                 <div className="search-page__detail-header">
                   <span className="search-page__category-tag">{selectedProduct.category}</span>
