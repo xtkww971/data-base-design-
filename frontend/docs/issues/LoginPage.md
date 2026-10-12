@@ -30,7 +30,7 @@ todo :
 - min-width: 0;
 + flex: none;
 
-미해결: SignUpPage.css 의 비밀번호, 비밀번호 확인, 닉네임 입력 박스에도 같은 문제가 남아 있음. 아이디 입력 박스는 input-row(가로 배치) 안에 있어서 flex: 1 이 필요하므로, 고칠 때 구분해야 함.
+SignUpPage.css 의 비밀번호, 비밀번호 확인, 닉네임 입력 박스에도 같은 문제가 있었고 4번에서 같이 수정함.
 
 3. 로그인 페이지 디자인 수정 - OK
 
@@ -84,5 +84,25 @@ margin: 5px calc(var(--input-inset) * -1);
 margin: 13px calc(var(--input-inset) * -1) 0;
 
 주의: --input-inset 은 입력 박스와 버튼의 공통 부모인 .login-page__form 에 정의해야 함. 입력 박스 규칙 안에 두면 버튼에서는 값이 없어서 margin 줄 전체가 무시됨. 폭을 바꿀 때는 이 값 한 곳만 고치면 됨.
+
+4. 회원가입 페이지를 로그인 페이지와 같은 디자인으로 수정 - OK
+
+SignUpPage.css 를 LoginPage.css 와 같은 값으로 맞춤 (3번의 패널 / 입력 박스 / 버튼 수치, --input-inset, 입력 박스 높이 버그 수정 포함).
+
+삭제: SignUpPage.jsx 의 "회원가입" 파란 배지(signup-page__eyebrow)와 해당 CSS 규칙
+
+회원가입에만 있는 부분:
+
+.signup-page__input-row  아이디 입력 박스 + 중복 확인 버튼 줄
++ margin: 5px calc(var(--input-inset) * -1);  줄 전체를 다른 입력 박스와 같은 폭으로 내밂
+
+.signup-page__input-row .signup-page__input
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  margin: 0;  가로 배치 안에서는 flex: 1 로 남는 폭을 채워야 함
+
+.signup-page__check-button
+height: 52px -> 50px  입력 박스 높이와 맞춤
 
 미확인: 린트와 빌드는 통과했으나, 수정한 쪽에서 브라우저로 직접 확인하지는 않음.

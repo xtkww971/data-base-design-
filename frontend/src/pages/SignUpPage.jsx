@@ -102,7 +102,6 @@ export default function SignUpPage() {
 
       <main className="signup-page__content">
         <section className="signup-page__panel">
-          <span className="signup-page__eyebrow">회원가입</span>
           <h1>새 계정을 만들어 보세요.</h1>
           <p className="signup-page__subtitle">가입하면 AI 추천 견적과 검색한 부품을 내 계정으로 관리할 수 있어요.</p>
 
