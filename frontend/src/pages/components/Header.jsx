@@ -58,7 +58,7 @@ export default function Header() {
 
         {/* Right side */}
         <div className="header__right">
-          <button type="button" aria-label="장바구니" className="header__icon-btn">
+          <button type="button" aria-label="장바구니" className="header__icon-btn" onClick={() => navigate('/cart')}>
             <svg
               width="15"
               height="15"
@@ -78,7 +78,7 @@ export default function Header() {
           {currentUser ? (
             <>
               <span className="header__user">{currentUser.nickname}님</span>
-              <button type="button" className="header__login" onClick={clearCurrentUser}>
+              <button type="button" className="header__login header__login--ghost" onClick={clearCurrentUser}>
                 로그아웃
               </button>
             </>
