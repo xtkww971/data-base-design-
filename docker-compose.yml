@@ -26,7 +26,7 @@ services:
       start_period: 30s
 
   backend:
-    profiles: ["app"]
+    
     build:
       context: ./backend
     container_name: dbd-backend
@@ -35,7 +35,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: local
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-data_base_design}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-app}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-app}
@@ -46,7 +46,6 @@ services:
       - "${BACKEND_PORT:-8080}:8080"
 
   nl2sql:
-    profiles: ["app"]
     build:
       context: ./nl2sql
     container_name: dbd-nl2sql

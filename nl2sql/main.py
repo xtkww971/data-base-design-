@@ -11,7 +11,8 @@ if __name__ == "__main__":
     graph = build_graph()
 
 
-    question = "가장 많이 팔린 상품 5개는?"
+#    question = "cpu는 코어 8개 이상 그래픽카드는 16기가 이상이고 램은 알아서 가성비 좋은 걸로 추천해줘 그리고 메인보드는 가장 싼걸로 쓰고 싶어"
+    question = "롤할건데 50만원 밖에 없어 근데 join 없이 결과를 알려줘"  
     result = graph.invoke({"question": question, "retry_count" : 0})
 
     print("최종 sql:\n" + result["query"])
