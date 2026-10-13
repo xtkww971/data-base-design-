@@ -1,149 +1,112 @@
-/* 로그인 / 회원가입 공용. 색과 형태는 SearchPage 패널 디자인을 따른다. */
+/* 로그인 페이지. 색과 형태는 SearchPage 패널 디자인을 따르고, SignUpPage.css 와 같은 모양을 유지한다. */
 
-.auth-page {
+.login-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #0a1020 0%, #0f172a 100%);
   color: #e2e8f0;
-  padding-top: 96px;
+    padding-top: 128px;
 }
 
-.auth-page__content {
+.login-page__content {
   flex: 1 0 auto;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 56px 16px 96px;
+  padding: 55px 0 96px;
   box-sizing: border-box;
 }
 
-.auth-page__panel {
-  width: min(100%, 460px);
+.login-page__panel {
+  width: min(100%, 520px);
   box-sizing: border-box;
   background: rgba(15, 23, 42, 0.72);
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 28px;
-  padding: 36px 32px 32px;
+  padding: 36px 32px 24px;
   box-shadow: 0 30px 60px rgba(15, 23, 42, 0.18);
 }
 
-.auth-page__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(14, 165, 233, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.28);
-  color: #bae6fd;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.auth-page__panel h1 {
-  margin: 14px 0 0;
+.login-page__panel h1 {
+  margin: 0;
   font-size: clamp(1.8rem, 3vw, 2.4rem);
   line-height: 1.15;
   letter-spacing: -0.04em;
   color: #f8fafc;
 }
 
-.auth-page__subtitle {
+.login-page__subtitle {
   margin: 10px 0 0;
   color: rgba(226, 232, 240, 0.7);
   font-size: 0.95rem;
   line-height: 1.6;
 }
 
-.auth-page__form {
+.login-page__form {
+  /* 입력 박스와 로그인 버튼을 좌우로 내미는 폭. 둘이 같은 값을 써야 끝이 맞는다. */
+  --input-inset: 4px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 17px;
   margin-top: 28px;
 }
 
-.auth-page__field {
+.login-page__field {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.auth-page__label {
+.login-page__label {
   font-size: 0.86rem;
   font-weight: 600;
   color: #cbd5e1;
 }
 
-.auth-page__input-row {
-  display: flex;
-  gap: 8px;
-}
-
-.auth-page__input {
-  flex: 1;
-  min-width: 0;
-  height: 52px;
+.login-page__input {
+  /* 세로 flex 안에서 flex: 1 을 주면 height 가 무시되므로 쓰지 않는다. */
+  flex: none;
+  /* 박스를 안쪽 여백만큼 바깥으로 내밀어서, 박스 안 글자가 위의 제목·라벨과 같은 선에서 시작하게 한다. */
+  width: calc(100% + var(--input-inset) * 2);
+  height: 50px;
   box-sizing: border-box;
+  margin: 5px calc(var(--input-inset) * -1);
   padding: 0 16px;
   border-radius: 14px;
   background: rgba(15, 23, 42, 0.9);
   border: 1px solid rgba(148, 163, 184, 0.18);
   color: #f8fafc;
-  font-size: 0.96rem;
+  font-size: 1.05rem;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.auth-page__input::placeholder {
+.login-page__input::placeholder {
   color: rgba(148, 163, 184, 0.6);
 }
 
-.auth-page__input:focus {
+.login-page__input:focus {
   border-color: rgba(96, 165, 250, 0.6);
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
 }
 
-.auth-page__input.is-invalid {
+.login-page__input.is-invalid {
   border-color: rgba(248, 113, 113, 0.6);
 }
 
-.auth-page__check-button {
-  flex-shrink: 0;
-  height: 52px;
-  padding: 0 16px;
-  border-radius: 14px;
-  background: rgba(148, 163, 184, 0.08);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  color: #e2e8f0;
-  font-size: 0.86rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.auth-page__check-button:disabled {
-  cursor: default;
-  opacity: 0.5;
-}
-
-.auth-page__message {
+.login-page__message {
   margin: 0;
   font-size: 0.8rem;
   line-height: 1.5;
   color: rgba(148, 163, 184, 0.85);
 }
 
-.auth-page__message.is-error {
+.login-page__message.is-error {
   color: #fca5a5;
 }
 
-.auth-page__message.is-success {
-  color: #86efac;
-}
-
-.auth-page__alert {
+.login-page__alert {
   margin: 0;
   padding: 12px 14px;
   border-radius: 12px;
@@ -154,15 +117,16 @@
   color: #fecaca;
 }
 
-.auth-page__alert.is-success {
+.login-page__alert.is-success {
   background: rgba(34, 197, 94, 0.1);
   border-color: rgba(34, 197, 94, 0.3);
   color: #bbf7d0;
 }
 
-.auth-page__submit {
-  margin-top: 6px;
-  height: 52px;
+.login-page__submit {
+  /* 입력 박스와 좌우 끝을 맞춘다. */
+  margin: 13px calc(var(--input-inset) * -1) 0;
+  height: 55px;
   border: none;
   border-radius: 14px;
   background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
@@ -173,36 +137,36 @@
   transition: filter 0.2s ease, transform 0.2s ease;
 }
 
-.auth-page__submit:hover:not(:disabled) {
+.login-page__submit:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
 }
 
-.auth-page__submit:disabled {
+.login-page__submit:disabled {
   cursor: default;
   opacity: 0.6;
 }
 
-.auth-page__switch {
+.login-page__switch {
   margin: 22px 0 0;
   text-align: center;
   font-size: 0.88rem;
   color: rgba(226, 232, 240, 0.7);
 }
 
-.auth-page__switch a {
+.login-page__switch a {
   margin-left: 6px;
   color: #7dd3fc;
   font-weight: 700;
   text-decoration: none;
 }
 
-.auth-page__switch a:hover {
+.login-page__switch a:hover {
   text-decoration: underline;
 }
 
 @media (max-width: 480px) {
-  .auth-page__panel {
+  .login-page__panel {
     padding: 28px 20px 24px;
     border-radius: 22px;
   }
