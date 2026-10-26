@@ -49,14 +49,23 @@ def init_vector_db_if_need():
                 )
 
 
+REQUIRED_TABLES = ["modules", "categories"]
+
+
 def get_schema(question: str) -> str:
-    """질문과 연관된 스키마 정보를 반환"""
-    results = schema_collection.query(
-        query_texts=[question],
-        n_results= 5
+    """질문과 연관된 스키마 정보를 반환. modules, categories는 항상 포함"""
+    required = schema_collection.get(
+        where_document={"$or": [{"$contains": f'"table": "{t}"'} for t in REQUIRED_TABLES]}
     )
 
-    docs = results.get("documents", [[]])[0]
+    # modules, categories 테이블을 제외한 나머지에서 유사도 검색
+    results = schema_collection.query(
+        query_texts=[question],
+        n_results= 5 - len(REQUIRED_TABLES),
+        where_document={"$and": [{"$not_contains": f'"table": "{t}"'} for t in REQUIRED_TABLES]}
+    )
+
+    docs = required.get("documents", []) + results.get("documents", [[]])[0]
     return "\n".join(docs) if docs else "관련 스키마 없음"
 
 def get_examples(question: str) -> str:
