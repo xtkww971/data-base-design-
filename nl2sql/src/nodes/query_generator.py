@@ -1,3 +1,5 @@
+import json
+
 from src.state import GraphState
 from langchain_core.prompts import ChatPromptTemplate
 from src.chatmodel import get_llm
@@ -20,6 +22,7 @@ SYSTEM_PROMPT = """당신은 숙력된 SQL 엔지니어 입니다. 주어진 스
 6. sql을 생성하지 못했을 때는 그 이유를 error에 기록하세요.
 7. 제품명·제조사·가격은 `modules'테이블 에만 있으므로 부품 조회는 항상 `modules'테이블을 조인하세요.
 8. modules 테이블의 모든 컬럼은 SELECT절에 항상 포함 시키세요.
+9. 질문에서 분류한 키워드는 참고용입니다. 질문 원문과 다르면 질문 원문을 따르세요.
 
 """
 
@@ -31,6 +34,9 @@ HUMAN_PROMPT = """DB 스키마 정보:
 
 질문:
 {question}
+
+질문에서 분류한 키워드:
+{keywords}
 """
 
 RETRY_PROMPT = """이전에 생성한 쿼리에 문제가 발생하였습니다. 오류를 참고해서 수정하세요
@@ -65,7 +71,8 @@ def query_generator(state: GraphState):
     input_variables = {
         "schema_info": schema,
         "few_shot_examples": example,
-        "question": question
+        "question": question,
+        "keywords": json.dumps(state.get("keywords", {}), ensure_ascii=False)
     }
 
     if state["retry_count"] > 0:
