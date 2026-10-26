@@ -17,6 +17,11 @@ spring:
         format_sql: true
         default_batch_fetch_size: 100
 
+nl2sql:
+  base-url: ${NL2SQL_BASE_URL:http://localhost:8000}
+  connect-timeout: 3s
+  read-timeout: 60s
+
 management:
   endpoints:
     web:
