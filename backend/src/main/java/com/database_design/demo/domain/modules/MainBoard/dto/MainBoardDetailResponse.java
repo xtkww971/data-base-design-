@@ -15,6 +15,7 @@ public record MainBoardDetailResponse(
         String brand,
         Integer price,
         String imageUrl,
+        Integer performanceScore,
         Specs specs) implements BaseProductDetail {
 
     /**
@@ -36,6 +37,7 @@ public record MainBoardDetailResponse(
                 mainBoard.getBrand(),
                 mainBoard.getPrice(),
                 mainBoard.getImageUrl(),
+                mainBoard.getPerformanceScore(),
                 new Specs(
                         mainBoard.getSocket(),
                         mainBoard.getFormFactor(),

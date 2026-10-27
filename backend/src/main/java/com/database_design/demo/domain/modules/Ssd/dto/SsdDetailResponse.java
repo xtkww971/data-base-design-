@@ -15,6 +15,7 @@ public record SsdDetailResponse(
         String brand,
         Integer price,
         String imageUrl,
+        Integer performanceScore,
         Specs specs) implements BaseProductDetail {
 
     /**
@@ -35,6 +36,7 @@ public record SsdDetailResponse(
                 ssd.getBrand(),
                 ssd.getPrice(),
                 ssd.getImageUrl(),
+                ssd.getPerformanceScore(),
                 new Specs(
                         ssd.getFormFactor(),
                         ssd.getCapacity(),

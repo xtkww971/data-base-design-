@@ -5,6 +5,7 @@ import com.database_design.demo.domain.modules.common.entity.Category;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -26,6 +27,9 @@ public record PowerRequest(
         @Size(max = 500, message = "이미지 주소는 500자 이하여야 합니다.")
         String imageUrl,
 
+        @PositiveOrZero(message = "성능 점수는 0 이상이어야 합니다.")
+        Integer performanceScore,
+
         @NotNull(message = "정격 출력(W)은 필수입니다.")
         @Positive(message = "정격 출력(W)은 0보다 커야 합니다.")
         Integer ratedPower,
@@ -45,6 +49,7 @@ public record PowerRequest(
                 .brand(brand)
                 .price(price)
                 .imageUrl(imageUrl)
+                .performanceScore(performanceScore)
                 .ratedPower(ratedPower)
                 .certification(certification)
                 .formFactor(formFactor)

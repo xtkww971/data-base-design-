@@ -15,6 +15,7 @@ public record PowerDetailResponse(
         String brand,
         Integer price,
         String imageUrl,
+        Integer performanceScore,
         Specs specs) implements BaseProductDetail {
 
     /**
@@ -34,6 +35,7 @@ public record PowerDetailResponse(
                 power.getBrand(),
                 power.getPrice(),
                 power.getImageUrl(),
+                power.getPerformanceScore(),
                 new Specs(
                         power.getRatedPower(),
                         power.getCertification(),
