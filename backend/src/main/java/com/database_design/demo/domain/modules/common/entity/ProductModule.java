@@ -48,19 +48,30 @@ public abstract class ProductModule {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
-    protected ProductModule(Category category, String name, String brand, Integer price, String imageUrl) {
+    /**
+     * 성능 점수. 카테고리마다 지표가 달라 같은 카테고리 안에서만 비교한다. 지표가 없는 카테고리는 null.
+     * 지표와 출처: docs/스키마 설계/03-부품-성능-점수.md
+     */
+    @Column(name = "performance_score")
+    private Integer performanceScore;
+
+    protected ProductModule(Category category, String name, String brand, Integer price, String imageUrl,
+            Integer performanceScore) {
         this.category = category;
         this.name = name;
         this.brand = brand;
         this.price = price;
         this.imageUrl = imageUrl;
+        this.performanceScore = performanceScore;
     }
 
-    protected void updateModule(String name, String brand, Integer price, String imageUrl) {
+    protected void updateModule(String name, String brand, Integer price, String imageUrl,
+            Integer performanceScore) {
         this.name = name;
         this.brand = brand;
         this.price = price;
         this.imageUrl = imageUrl;
+        this.performanceScore = performanceScore;
     }
 
     /**

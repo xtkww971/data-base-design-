@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * SSD 상세 스펙. 공통 속성(name, brand, price, imageUrl)은 modules 테이블에 있다.
+ * SSD 상세 스펙. 공통 속성(name, brand, price, imageUrl, performanceScore)은 modules 테이블에 있다.
  */
 @Table(name = "ssds")
 @Entity
@@ -34,18 +34,18 @@ public class Ssd extends ProductModule {
     private Integer writeSpeed;
 
     @Builder
-    private Ssd(Category category, String name, String brand, Integer price, String imageUrl, String formFactor,
+    private Ssd(Category category, String name, String brand, Integer price, String imageUrl, Integer performanceScore, String formFactor,
             Integer capacity, Integer readSpeed, Integer writeSpeed) {
-        super(category, name, brand, price, imageUrl);
+        super(category, name, brand, price, imageUrl, performanceScore);
         this.formFactor = formFactor;
         this.capacity = capacity;
         this.readSpeed = readSpeed;
         this.writeSpeed = writeSpeed;
     }
 
-    public void update(String name, String brand, Integer price, String imageUrl, String formFactor, Integer capacity,
+    public void update(String name, String brand, Integer price, String imageUrl, Integer performanceScore, String formFactor, Integer capacity,
             Integer readSpeed, Integer writeSpeed) {
-        updateModule(name, brand, price, imageUrl);
+        updateModule(name, brand, price, imageUrl, performanceScore);
         this.formFactor = formFactor;
         this.capacity = capacity;
         this.readSpeed = readSpeed;

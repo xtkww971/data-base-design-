@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * HDD 상세 스펙. 공통 속성(name, brand, price, imageUrl)은 modules 테이블에 있다.
+ * HDD 상세 스펙. 공통 속성(name, brand, price, imageUrl, performanceScore)은 modules 테이블에 있다.
  */
 @Table(name = "hdds")
 @Entity
@@ -34,18 +34,18 @@ public class Hdd extends ProductModule {
     private Integer bufferMemory;
 
     @Builder
-    private Hdd(Category category, String name, String brand, Integer price, String imageUrl, String interfaceType,
+    private Hdd(Category category, String name, String brand, Integer price, String imageUrl, Integer performanceScore, String interfaceType,
             Integer capacity, Integer rpm, Integer bufferMemory) {
-        super(category, name, brand, price, imageUrl);
+        super(category, name, brand, price, imageUrl, performanceScore);
         this.interfaceType = interfaceType;
         this.capacity = capacity;
         this.rpm = rpm;
         this.bufferMemory = bufferMemory;
     }
 
-    public void update(String name, String brand, Integer price, String imageUrl, String interfaceType,
+    public void update(String name, String brand, Integer price, String imageUrl, Integer performanceScore, String interfaceType,
             Integer capacity, Integer rpm, Integer bufferMemory) {
-        updateModule(name, brand, price, imageUrl);
+        updateModule(name, brand, price, imageUrl, performanceScore);
         this.interfaceType = interfaceType;
         this.capacity = capacity;
         this.rpm = rpm;

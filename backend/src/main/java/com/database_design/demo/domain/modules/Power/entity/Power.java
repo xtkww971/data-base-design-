@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 파워 상세 스펙. 공통 속성(name, brand, price, imageUrl)은 modules 테이블에 있다.
+ * 파워 상세 스펙. 공통 속성(name, brand, price, imageUrl, performanceScore)은 modules 테이블에 있다.
  */
 @Table(name = "power")
 @Entity
@@ -31,17 +31,17 @@ public class Power extends ProductModule {
     private String formFactor;
 
     @Builder
-    private Power(Category category, String name, String brand, Integer price, String imageUrl, Integer ratedPower,
+    private Power(Category category, String name, String brand, Integer price, String imageUrl, Integer performanceScore, Integer ratedPower,
             String certification, String formFactor) {
-        super(category, name, brand, price, imageUrl);
+        super(category, name, brand, price, imageUrl, performanceScore);
         this.ratedPower = ratedPower;
         this.certification = certification;
         this.formFactor = formFactor;
     }
 
-    public void update(String name, String brand, Integer price, String imageUrl, Integer ratedPower,
+    public void update(String name, String brand, Integer price, String imageUrl, Integer performanceScore, Integer ratedPower,
             String certification, String formFactor) {
-        updateModule(name, brand, price, imageUrl);
+        updateModule(name, brand, price, imageUrl, performanceScore);
         this.ratedPower = ratedPower;
         this.certification = certification;
         this.formFactor = formFactor;
