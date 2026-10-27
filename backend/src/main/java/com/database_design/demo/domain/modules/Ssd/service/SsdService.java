@@ -50,7 +50,7 @@ public class SsdService {
     @Transactional
     public SsdResponse update(Long moduleId, SsdRequest request) {
         Ssd ssd = findById(moduleId);
-        ssd.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.formFactor(),
+        ssd.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.performanceScore(), request.formFactor(),
             request.capacity(), request.readSpeed(), request.writeSpeed());
         return SsdResponse.from(ssd);
     }

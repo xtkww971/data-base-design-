@@ -50,7 +50,7 @@ public class MainBoardService {
     @Transactional
     public MainBoardResponse update(Long moduleId, MainBoardRequest request) {
         MainBoard mainBoard = findById(moduleId);
-        mainBoard.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.socket(),
+        mainBoard.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.performanceScore(), request.socket(),
             request.formFactor(), request.memorySpec(), request.memorySlots(), request.chipset());
         return MainBoardResponse.from(mainBoard);
     }
