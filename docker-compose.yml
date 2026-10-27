@@ -67,6 +67,16 @@ services:
       - ./vectordb:/app/vectordb
       - hf-cache:/root/.cache/huggingface
 
+  frontend:
+    build:
+      context: ./frontend
+    container_name: dbd-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+
 volumes:
   mysql-data:
   hf-cache:
