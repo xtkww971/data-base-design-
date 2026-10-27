@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -5,6 +6,8 @@ from pydantic import BaseModel, Field
 
 from tools.retriever import init_vector_db_if_need
 from src.graph import build_graph
+
+logger = logging.getLogger("uvicorn.error")
 
 
 class QueryRequest(BaseModel):
@@ -38,7 +41,12 @@ def health():
 @app.post("/query", response_model=QueryResponse)
 def query(request: QueryRequest):
     # graph.invoke가 동기 함수이므로 def로 선언해 스레드풀에서 실행
-    result = app.state.graph.invoke({"question": request.question, "retry_count": 0})
+    try:
+        result = app.state.graph.invoke({"question": request.question, "retry_count": 0})
+    except Exception as e:
+        # LLM 호출 실패(토큰 한도 초과로 JSON 생성 실패 등)는 500 대신 error 로 돌려준다
+        logger.exception("쿼리 생성 중 오류")
+        return QueryResponse(error=f"쿼리 생성 중 오류: {type(e).__name__}")
 
     return QueryResponse(
         query=result.get("query", ""),
