@@ -15,6 +15,8 @@ export interface BaseProductDetail {
   brand: string;
   price: number;
   imageUrl: string;
+  /** 성능 점수. 카테고리마다 지표가 달라 같은 카테고리 안에서만 비교. 지표가 없으면 null */
+  performanceScore: number | null;
 }
 
 export interface CpuDetailResponse extends BaseProductDetail {
