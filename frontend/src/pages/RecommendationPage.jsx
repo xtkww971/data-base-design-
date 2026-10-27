@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
+import { queryNl2Sql } from '../api/nl2sqlApi.js';
 import './RecommendationPage.css';
 
 const SIDEBAR_BREAKPOINT = 900; // 이 폭 이하면 자동으로 닫힘
@@ -14,6 +15,49 @@ const initialRecentPrompts = [];
 const CONFIG_LIMITS = {
   ram: 4,
   monitor: 2,
+};
+
+// categories 테이블 값(V3 마이그레이션 순서) → 견적 칸
+const CATEGORY_TO_CONFIG_KEY = {
+  CPU: 'cpu',
+  MAINBOARD: 'motherboard',
+  RAM: 'ram',
+  GPU: 'gpu',
+  POWER: 'power',
+  SSD: 'ssd',
+  HDD: 'hdd',
+  MONITOR: 'monitor',
+};
+const CATEGORY_ID_TO_NAME = ['CPU', 'MAINBOARD', 'RAM', 'GPU', 'POWER', 'SSD', 'HDD', 'MONITOR'];
+const MULTI_ITEM_KEYS = ['ram', 'monitor'];
+
+/**
+ * nl2sql 결과 행을 견적 칸에 채운다. 행에 category_name 이나 category_id 가 있어야 칸을 알 수 있고,
+ * 없으면 칸은 비워 두고 결과 표만 보여준다.
+ */
+const toConfiguration = (rows) => {
+  const configuration = Object.fromEntries(Object.values(CATEGORY_TO_CONFIG_KEY).map((key) => [key, undefined]));
+
+  rows.forEach((row) => {
+    const categoryName = row.category_name ?? CATEGORY_ID_TO_NAME[Number(row.category_id) - 1];
+    const key = CATEGORY_TO_CONFIG_KEY[categoryName];
+    if (!key || !row.name) {
+      return;
+    }
+    if (MULTI_ITEM_KEYS.includes(key)) {
+      configuration[key] = [...(configuration[key] ?? []), row.name];
+    } else if (configuration[key] === undefined) {
+      configuration[key] = row.name;
+    }
+  });
+  return configuration;
+};
+
+const formatCellValue = (value) => {
+  if (value === null || value === undefined) {
+    return '-';
+  }
+  return typeof value === 'number' ? value.toLocaleString() : String(value);
 };
 
 const formatConfigurationValue = (key, value) => {
@@ -44,7 +88,7 @@ export default function RecommendationPage() {
 
   const selectedPrompt = selectedPromptIndex === null ? null : recentPrompts[selectedPromptIndex];
 
-  const handleSubmitPrompt = () => {
+  const handleSubmitPrompt = async () => {
     const trimmedPrompt = promptText.trim();
 
     if (!trimmedPrompt || isGenerating) {
@@ -58,28 +102,26 @@ export default function RecommendationPage() {
       now.getDate()
     ).padStart(2, '0')}`;
 
+    let result = null;
+    let error = null;
+    try {
+      result = await queryNl2Sql(trimmedPrompt);
+    } catch (e) {
+      error = e.message;
+    }
+
     const newEntry = {
       date: formattedDate,
       prompt: trimmedPrompt,
-      configuration: {
-        cpu: undefined,
-        motherboard: undefined,
-        ram: undefined,
-        gpu: undefined,
-        power: undefined,
-        ssd: undefined,
-        hdd: undefined,
-        monitor: undefined,
-      },
+      configuration: toConfiguration(result?.rows ?? []),
+      result,
+      error,
     };
 
     setRecentPrompts((prev) => [newEntry, ...prev]);
     setSelectedPromptIndex(0);
     setPromptText('');
-
-    setTimeout(() => {
-      setIsGenerating(false);
-    }, 1800);
+    setIsGenerating(false);
   };
 
   const handleDeletePrompt = (indexToDelete) => {
@@ -229,6 +271,44 @@ export default function RecommendationPage() {
                       </div>
                     ))}
                   </div>
+
+                  {selectedPrompt.error ? (
+                    <p className="recommendation-page__result-error">{selectedPrompt.error}</p>
+                  ) : null}
+
+                  {selectedPrompt.result ? (
+                    <div className="recommendation-page__result">
+                      <div className="recommendation-page__result-meta">
+                        조회 결과 {selectedPrompt.result.rowCount}건
+                      </div>
+                      {selectedPrompt.result.rowCount > 0 ? (
+                        <div className="recommendation-page__result-table-wrapper">
+                          <table className="recommendation-page__result-table">
+                            <thead>
+                              <tr>
+                                {selectedPrompt.result.columns.map((column) => (
+                                  <th key={column}>{column}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedPrompt.result.rows.map((row, rowIndex) => (
+                                <tr key={rowIndex}>
+                                  {selectedPrompt.result.columns.map((column) => (
+                                    <td key={column}>{formatCellValue(row[column])}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : null}
+                      <details className="recommendation-page__result-sql">
+                        <summary>생성된 SQL 보기</summary>
+                        <pre>{selectedPrompt.result.sql}</pre>
+                      </details>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>
