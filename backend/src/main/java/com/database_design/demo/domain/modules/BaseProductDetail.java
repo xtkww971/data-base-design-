@@ -23,4 +23,7 @@ public interface BaseProductDetail {
 
     /** 제품 큰 이미지 URL. */
     String imageUrl();
+
+    /** 성능 점수. 카테고리마다 지표가 달라 같은 카테고리 안에서만 비교한다. 지표가 없으면 null. */
+    Integer performanceScore();
 }
