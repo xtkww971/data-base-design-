@@ -30,8 +30,9 @@ def init_vector_db_if_need():
 
     schema_count = schema_collection.count()
     fewshot_count = fewshot_collection.count()
+    program_count = program_collection.count()
 
-    if schema_count == 0 or fewshot_count == 0:
+    if schema_count == 0 or fewshot_count == 0 or program_count == 0:
         print("vector db 생성")
 
         #스키마 데이터 임베딩
