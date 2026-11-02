@@ -50,7 +50,7 @@ public class CpuService {
     @Transactional
     public CpuResponse update(Long moduleId, CpuRequest request) {
         CPU cpu = findById(moduleId);
-        cpu.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.socket(),
+        cpu.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.performanceScore(), request.socket(),
             request.cores(), request.threads(), request.hasGraphics(), request.clockSpeed());
         return CpuResponse.from(cpu);
     }

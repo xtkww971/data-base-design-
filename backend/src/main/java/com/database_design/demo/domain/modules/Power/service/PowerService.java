@@ -50,7 +50,7 @@ public class PowerService {
     @Transactional
     public PowerResponse update(Long moduleId, PowerRequest request) {
         Power power = findById(moduleId);
-        power.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.ratedPower(),
+        power.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.performanceScore(), request.ratedPower(),
             request.certification(), request.formFactor());
         return PowerResponse.from(power);
     }

@@ -50,7 +50,7 @@ public class HddService {
     @Transactional
     public HddResponse update(Long moduleId, HddRequest request) {
         Hdd hdd = findById(moduleId);
-        hdd.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.interfaceType(),
+        hdd.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.performanceScore(), request.interfaceType(),
             request.capacity(), request.rpm(), request.bufferMemory());
         return HddResponse.from(hdd);
     }

@@ -15,6 +15,7 @@ public record RamDetailResponse(
         String brand,
         Integer price,
         String imageUrl,
+        Integer performanceScore,
         Specs specs) implements BaseProductDetail {
 
     /**
@@ -35,6 +36,7 @@ public record RamDetailResponse(
                 ram.getBrand(),
                 ram.getPrice(),
                 ram.getImageUrl(),
+                ram.getPerformanceScore(),
                 new Specs(
                         ram.getMemorySpec(),
                         ram.getCapacity(),

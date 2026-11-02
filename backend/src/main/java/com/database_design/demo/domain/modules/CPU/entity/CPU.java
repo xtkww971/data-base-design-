@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * CPU 상세 스펙. 공통 속성(name, brand, price, imageUrl)은 modules 테이블에 있다.
+ * CPU 상세 스펙. 공통 속성(name, brand, price, imageUrl, performanceScore)은 modules 테이블에 있다.
  */
 @Table(name = "cpus")
 @Entity
@@ -37,9 +37,9 @@ public class CPU extends ProductModule {
     private String clockSpeed;
 
     @Builder
-    private CPU(Category category, String name, String brand, Integer price, String imageUrl, String socket,
+    private CPU(Category category, String name, String brand, Integer price, String imageUrl, Integer performanceScore, String socket,
             Integer cores, Integer threads, Boolean hasGraphics, String clockSpeed) {
-        super(category, name, brand, price, imageUrl);
+        super(category, name, brand, price, imageUrl, performanceScore);
         this.socket = socket;
         this.cores = cores;
         this.threads = threads;
@@ -47,9 +47,9 @@ public class CPU extends ProductModule {
         this.clockSpeed = clockSpeed;
     }
 
-    public void update(String name, String brand, Integer price, String imageUrl, String socket, Integer cores,
+    public void update(String name, String brand, Integer price, String imageUrl, Integer performanceScore, String socket, Integer cores,
             Integer threads, Boolean hasGraphics, String clockSpeed) {
-        updateModule(name, brand, price, imageUrl);
+        updateModule(name, brand, price, imageUrl, performanceScore);
         this.socket = socket;
         this.cores = cores;
         this.threads = threads;

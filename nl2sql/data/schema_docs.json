@@ -16,6 +16,7 @@
       {"name": "name", "type": "TEXT", "description": "제품명. 예: AMD 라이젠5 5세대 7500F"},
       {"name": "brand", "type": "TEXT", "description": "제조사. 예: AMD, 인텔, 삼성전자, MSI, ASUS, WD, Seagate"},
       {"name": "price", "type": "INTEGER", "description": "최저가. 원 단위 정수 (150만원 → 1500000)"},
+      {"name": "performance_score", "type": "INTEGER", "description": "성능 점수. 클수록 좋음. 카테고리마다 지표·단위가 달라 반드시 같은 category_id 안에서만 비교·정렬 (CPU 점수와 GPU 점수 비교 불가). CPU=PassMark CPU Mark(약 2만~5만), GPU=PassMark G3D Mark(약 1.6만~3.5만), SSD·HDD=PassMark Disk Rating(같은 척도, SSD 약 4천~5만, HDD 약 1천~3천), RAM=이론 대역폭 MB/s, POWER=80PLUS 효율 %(80~94), MONITOR=초당 픽셀 수 Mpx/s, MAINBOARD=항상 NULL. '성능 좋은', '빠른' 질문에 사용"},
       {"name": "image_url", "type": "TEXT", "description": "제품 이미지 URL. 유일하게 NULL 허용"}
     ]
   },

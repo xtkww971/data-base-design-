@@ -16,6 +16,7 @@ public record MonitorDetailResponse(
         String brand,
         Integer price,
         String imageUrl,
+        Integer performanceScore,
         Specs specs) implements BaseProductDetail {
 
     /**
@@ -37,6 +38,7 @@ public record MonitorDetailResponse(
                 monitor.getBrand(),
                 monitor.getPrice(),
                 monitor.getImageUrl(),
+                monitor.getPerformanceScore(),
                 new Specs(
                         monitor.getScreenSize(),
                         monitor.getResolution(),

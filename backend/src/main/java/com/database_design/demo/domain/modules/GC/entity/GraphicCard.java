@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 그래픽카드 상세 스펙. 공통 속성(name, brand, price, imageUrl)은 modules 테이블에 있다.
+ * 그래픽카드 상세 스펙. 공통 속성(name, brand, price, imageUrl, performanceScore)은 modules 테이블에 있다.
  */
 @Table(name = "graphic_cards")
 @Entity
@@ -40,9 +40,9 @@ public class GraphicCard extends ProductModule {
     private String ports;
 
     @Builder
-    private GraphicCard(Category category, String name, String brand, Integer price, String imageUrl, String chipset,
+    private GraphicCard(Category category, String name, String brand, Integer price, String imageUrl, Integer performanceScore, String chipset,
             String memoryType, Integer memoryCapacity, Integer length, Integer recommendedPower, String ports) {
-        super(category, name, brand, price, imageUrl);
+        super(category, name, brand, price, imageUrl, performanceScore);
         this.chipset = chipset;
         this.memoryType = memoryType;
         this.memoryCapacity = memoryCapacity;
@@ -51,9 +51,9 @@ public class GraphicCard extends ProductModule {
         this.ports = ports;
     }
 
-    public void update(String name, String brand, Integer price, String imageUrl, String chipset, String memoryType,
+    public void update(String name, String brand, Integer price, String imageUrl, Integer performanceScore, String chipset, String memoryType,
             Integer memoryCapacity, Integer length, Integer recommendedPower, String ports) {
-        updateModule(name, brand, price, imageUrl);
+        updateModule(name, brand, price, imageUrl, performanceScore);
         this.chipset = chipset;
         this.memoryType = memoryType;
         this.memoryCapacity = memoryCapacity;

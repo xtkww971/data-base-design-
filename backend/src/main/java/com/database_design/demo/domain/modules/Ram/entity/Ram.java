@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 램 상세 스펙. 공통 속성(name, brand, price, imageUrl)은 modules 테이블에 있다.
+ * 램 상세 스펙. 공통 속성(name, brand, price, imageUrl, performanceScore)은 modules 테이블에 있다.
  */
 @Table(name = "rams")
 @Entity
@@ -34,18 +34,18 @@ public class Ram extends ProductModule {
     private Integer packageCount;
 
     @Builder
-    private Ram(Category category, String name, String brand, Integer price, String imageUrl, String memorySpec,
+    private Ram(Category category, String name, String brand, Integer price, String imageUrl, Integer performanceScore, String memorySpec,
             Integer capacity, Integer clock, Integer packageCount) {
-        super(category, name, brand, price, imageUrl);
+        super(category, name, brand, price, imageUrl, performanceScore);
         this.memorySpec = memorySpec;
         this.capacity = capacity;
         this.clock = clock;
         this.packageCount = packageCount;
     }
 
-    public void update(String name, String brand, Integer price, String imageUrl, String memorySpec, Integer capacity,
+    public void update(String name, String brand, Integer price, String imageUrl, Integer performanceScore, String memorySpec, Integer capacity,
             Integer clock, Integer packageCount) {
-        updateModule(name, brand, price, imageUrl);
+        updateModule(name, brand, price, imageUrl, performanceScore);
         this.memorySpec = memorySpec;
         this.capacity = capacity;
         this.clock = clock;
