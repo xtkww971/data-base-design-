@@ -45,7 +45,7 @@ flowchart TD
 | `budget_min` | X | PC 전체 예산의 최솟값. 원 단위 정수 |
 | `budget_max` | X | PC 전체 예산의 최댓값. 원 단위 정수 |
 
-`budget_min`이 `budget_max`보다 크면 422로 거부한다. 선택 필드가 없으면 `question`만으로 SQL을 생성한다.
+선택 필드가 없으면 `question`만으로 SQL을 생성한다.
 
 
 ## 1. 권장 사양 검색 — program_spec_retriever
