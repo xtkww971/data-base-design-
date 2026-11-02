@@ -6,8 +6,9 @@ nl2sql 서비스가 자연어 질의를 받아 SQL을 돌려주기까지의 과�
 
 ```mermaid
 flowchart TD
-    Q["질의 수신<br/>POST /query"] --> K["1. 키워드 분류<br/>keyword_extractor"]
-    K --> S["2. RAG: 스키마 검색<br/>schema_retriever"]
+    Q["질의 수신<br/>POST /query"] -- "programs 있음" --> P["1. 권장 사양 검색<br/>program_spec_retriever"]
+    Q -- "programs 없음" --> S["2. RAG: 스키마 검색<br/>schema_retriever"]
+    P --> S
     S --> E["3. RAG: 예시 검색<br/>example_retriever"]
     E --> G["4. SQL 생성<br/>query_generator"]
     G --> V["5. 검증<br/>validator"]
@@ -17,7 +18,7 @@ flowchart TD
 
 | 단계 | 하는 일 | 사용하는 것 | 결과 (State) |
 |---|---|---|---|
-| 1. 키워드 분류 | 질의에서 카테고리·제조사·가격·스펙·프로그램 추출 | LLM | `keywords` |
+| 1. 권장 사양 검색 (선택) | 입력받은 프로그램의 권장 사양 검색 | 벡터 DB | `program_specs` |
 | 2. 스키마 검색 | 질의와 관련된 테이블 스키마 5개 검색 | 벡터 DB | `schema_info` |
 | 3. 예시 검색 | 비슷한 질문-SQL 예시 3개 검색 | 벡터 DB | `query_example` |
 | 4. SQL 생성 | 1~3의 결과와 질의로 SQL 작성 | LLM | `query`, `retry_count` |
@@ -29,26 +30,33 @@ flowchart TD
 `POST /query`로 질의를 받아 그래프를 실행한다. 
 
 ```json
-{ "question": "VRAM 16GB 이상 MSI 그래픽카드 100만원 이하" }
+{
+  "question": "VRAM 16GB 이상 MSI 그래픽카드 100만원 이하",
+  "programs": ["배그", "포토샵"],
+  "budget_min": 1000000,
+  "budget_max": 2000000
+}
 ```
 
-
-
-## 1. 키워드 분류 — keyword_extractor
-
-[nl2sql/src/nodes/keyword_extractor.py](../nl2sql/src/nodes/keyword_extractor.py)
-
-LLM이 질의를 읽고 키워드를 분류해 `keywords`에 저장한다. 질의에 없는 항목은 빈 값(`null`, `[]`)이다.
-
-| 키 | 내용 | 예시 |
+| 필드 | 필수 | 내용 |
 |---|---|---|
-| `categories` | 부품 카테고리. CPU, MAINBOARD, RAM, GPU, POWER, SSD, HDD, MONITOR 중 하나 | `["GPU"]` |
-| `brands` | 제조사 | `["MSI"]` |
-| `price` | `{min, max}`, 원 단위 정수 | "100만원 이하" → `{"min": null, "max": 1000000}` |
-| `specs` | `{name, operator, value}` 목록 | "VRAM 16GB 이상" → `{"name": "VRAM", "operator": ">=", "value": "16GB"}` |
-| `program` | PC로 사용하려는 게임·프로그램 | "롤 할 때 필요한 스펙" → `["롤"]` |
+| `question` | O | 자연어 질의 |
+| `programs` | X | 컴퓨터로 사용할 주요 프로그램 이름 목록. 공백을 제거하고, 빈 문자열은 뺀다 |
+| `budget_min` | X | PC 전체 예산의 최솟값. 원 단위 정수 |
+| `budget_max` | X | PC 전체 예산의 최댓값. 원 단위 정수 |
 
-분류한 키워드는 4단계 SQL 생성 프롬프트에 참고용으로 들어간다.
+`budget_min`이 `budget_max`보다 크면 422로 거부한다. 선택 필드가 없으면 `question`만으로 SQL을 생성한다.
+
+
+## 1. 권장 사양 검색 — program_spec_retriever
+
+[nl2sql/src/nodes/program_spec_retriever.py](../nl2sql/src/nodes/program_spec_retriever.py) → `get_program_requirements()`
+
+`programs`가 입력된 경우에만 실행한다. 프로그램별 권장 사양을 찾아 `program_specs`에 저장하고, 찾지 못한 프로그램은 제외한다.
+
+- [program_specs.json](../nl2sql/data/program_specs.json)의 `name`과 `aliases`를 각각 문서로 임베딩하고, 사양은 `metadata`에 저장한다.
+- 입력한 프로그램 이름과 가장 가까운 문서의 거리가 `PROGRAM_MATCH_THRESHOLD`(0.075) 이하일 때만 해당 사양을 사용한다.
+- 질의에만 프로그램 이름이 있고 `programs`가 없으면 검색하지 않는다.
 
 ## 2~3. RAG — 스키마·예시 검색
 
@@ -102,7 +110,8 @@ LLM(Groq `openai/gpt-oss-120b`, temperature 0)에 다음을 넣어 SQL을 만든
 - 2단계의 스키마
 - 3단계의 예시
 - 질의 원문
-- 1단계의 키워드
+- 1단계의 권장 사양 (`program_specs`가 있을 때만)
+- 입력받은 예산 (`budget_min` 또는 `budget_max`가 있을 때만)
 
 주요 규칙은 다음과 같다.
 
@@ -110,7 +119,7 @@ LLM(Groq `openai/gpt-oss-120b`, temperature 0)에 다음을 넣어 SQL을 만든
 - 스키마에 없는 테이블·컬럼은 쓰지 않는다.
 - 부품 조회는 항상 `modules`를 조인하고, `modules`의 모든 컬럼을 SELECT에 포함한다.
 - 개수 제한이 있는 질의에만 `LIMIT`을 쓴다.
-- 키워드는 참고용이다. 질의 원문과 다르면 원문을 따른다.
+- 예산은 PC 전체 예산으로 본다. 부품 목록 조회에만 `modules.price <= budget_max`를 적용하고, `budget_min`은 가격 조건으로 쓰지 않는다. 질의 원문에 가격 조건이 있으면 원문을 따른다.
 
 생성할 때마다 `retry_count`가 1씩 늘어난다. 재시도일 때는 이전 SQL과 오류 내용을 프롬프트에 추가해 고치게 한다.
 
@@ -151,7 +160,7 @@ LLM(Groq `openai/gpt-oss-120b`, temperature 0)에 다음을 넣어 SQL을 만든
 
 ## 알아둘 점
 
-- **LLM 호출 횟수**: 질의 하나당 키워드 분류 1번 + SQL 생성 1~3번이다.
+- **LLM 호출 횟수**: 질의 하나당 SQL 생성 1~3번이다.
 - **MySQL 필요**: 검증에서 `EXPLAIN`을 실행하므로 MySQL이 꺼져 있으면 모든 질의가 3번 재시도한 뒤 실패한다.
 - **실행 위치**: `./vectordb`, `data/*.json`을 상대 경로로 열기 때문에 로컬에서는 `nl2sql/` 폴더에서 실행해야 한다.
 - **필수 테이블 필터**: `modules`, `categories`는 문서 안의 `"table": "modules"` 문자열로 찾는다. 스키마 문서를 적재하는 `json.dumps` 형식을 바꾸면 필터가 동작하지 않을 수 있다.
