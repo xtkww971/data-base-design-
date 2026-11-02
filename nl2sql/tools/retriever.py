@@ -17,6 +17,10 @@ fewshot_collection = chroma_client.get_or_create_collection(
     name="fewshot_collection",
     embedding_function=bge_m3_ef
 )
+program_collection = chroma_client.get_or_create_collection(
+    name="program_collection",
+    embedding_function=bge_m3_ef
+)
 
 
 
@@ -48,8 +52,21 @@ def init_vector_db_if_need():
                     ids=[f"fewshot_{i}"]
                 )
 
+        #프로그램 이름, 별칭을 각각 문서로 임베딩
+        with open("data/program_specs.json", "r", encoding="utf-8") as f:
+            programs = json.load(f)
+            for i , program in enumerate(programs):
+                names = [program["name"]] + program["aliases"]
+                program_collection.upsert(
+                    documents=names,
+                    metadatas=[{"specs": json.dumps(program["specs"])}] * len(names),
+                    ids=[f"program_{i}_{j}" for j in range(len(names))]
+                )
+
 
 REQUIRED_TABLES = ["modules", "categories"]
+PROGRAM_MATCH_THRESHOLD = 0.075
+SPEC_LABELS = {"vram_gb": "VRAM", "ram_gb": "RAM", "storage_gb": "저장공간"}
 
 
 def get_schema(question: str) -> str:
@@ -82,4 +99,21 @@ def get_examples(question: str) -> str:
     for doc, meta in zip(docs, metas):
         few_shot_str += f"Question: {doc}\nSQL: {meta['query']}\n\n"
 
-    return few_shot_str if few_shot_str else "참고할 예시 없음"    
+    return few_shot_str if few_shot_str else "참고할 예시 없음"
+
+def get_program_requirements(program: str) -> str:
+    """프로그램의 권장 사양을 반환. 찾지 못하면 빈 문자열"""
+    results = program_collection.query(
+        query_texts=[program],
+        n_results=1
+    )
+
+    # 유사도 검색은 항상 가장 가까운 문서를 반환하므로 거리로 없는 프로그램을 걸러냄
+    if results["distances"][0][0] > PROGRAM_MATCH_THRESHOLD:
+        return ""
+
+    specs = json.loads(results["metadatas"][0][0]["specs"])
+    requirements = [f"{label} {specs[key]}GB 이상" for key, label in SPEC_LABELS.items() if specs[key] is not None]
+    if specs["cpu_cores"] is not None:
+        requirements.append(f"CPU {specs['cpu_cores']}코어 이상")
+    return ", ".join(requirements)
