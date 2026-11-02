@@ -4,63 +4,21 @@ import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import './CartPage.css';
 import { useCurrentUser } from '../auth/authStore.js';
-import dummyCpuImage from '../assets/dummy_cpu.webp';
-import dummyMainboardImage from '../assets/dummy_motherbored.webp';
-import dummyRamImage from '../assets/dummy_ram.jpg';
-import dummyGpuImage from '../assets/dummy_gpu.jpg';
-
-// 프로토타입용 더미 데이터. 장바구니 API 가 생기면 서버에서 받아온 값으로 바꾼다.
-const DUMMY_CART_ITEMS = [
-  {
-    id: 1,
-    category: 'CPU',
-    name: 'AMD 라이젠7 7800X3D',
-    brand: 'AMD',
-    summary: '8코어 / 16스레드 / 4.2GHz',
-    price: 479000,
-    quantity: 1,
-    image: dummyCpuImage,
-  },
-  {
-    id: 2,
-    category: 'MAINBOARD',
-    name: 'MSI MAG B650 토마호크 WIFI',
-    brand: 'MSI',
-    summary: 'AM5 / ATX / DDR5',
-    price: 289000,
-    quantity: 1,
-    image: dummyMainboardImage,
-  },
-  {
-    id: 3,
-    category: 'RAM',
-    name: 'TeamGroup T-Force Delta RGB DDR5-6000 CL30 32GB(16Gx2)',
-    brand: 'TeamGroup',
-    summary: 'DDR5 / 32GB / 6000MHz',
-    price: 159000,
-    quantity: 2,
-    image: dummyRamImage,
-  },
-  {
-    id: 4,
-    category: 'GPU',
-    name: 'ASUS TUF Gaming 지포스 RTX 4070 SUPER OC 12GB',
-    brand: 'ASUS',
-    summary: 'GeForce RTX 4070 SUPER / 12GB',
-    price: 949000,
-    quantity: 1,
-    image: dummyGpuImage,
-  },
-];
-
-const MAX_QUANTITY = 99;
+import {
+  CART_MAX_QUANTITY as MAX_QUANTITY,
+  changeCartQuantity,
+  clearCart,
+  removeFromCart,
+  useCartItems,
+} from '../cart/cartStore.js';
+import { DUMMY_IMAGES } from '../assets/dummyImages.js';
 
 const formatPrice = (price) => `₩ ${new Intl.NumberFormat('ko-KR').format(price)}`;
 
 export default function CartPage() {
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
-  const [items, setItems] = useState(DUMMY_CART_ITEMS);
+  const items = useCartItems();
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
 
   // 팝업이 떠 있는 동안 Esc 로 닫을 수 있게 한다.
@@ -89,19 +47,8 @@ export default function CartPage() {
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const changeQuantity = (id, delta) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.min(MAX_QUANTITY, Math.max(1, item.quantity + delta)) }
-          : item,
-      ),
-    );
-  };
-
-  const removeItem = (id) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  };
+  const changeQuantity = changeCartQuantity;
+  const removeItem = removeFromCart;
 
   return (
     <div className="cart-page">
@@ -116,7 +63,7 @@ export default function CartPage() {
             </div>
 
             {items.length > 0 && (
-              <button type="button" className="cart-page__clear" onClick={() => setItems([])}>
+              <button type="button" className="cart-page__clear" onClick={clearCart}>
                 전체 비우기
               </button>
             )}
@@ -135,7 +82,12 @@ export default function CartPage() {
                 {items.map((item) => (
                   <li key={item.id} className="cart-page__item">
                     <div className="cart-page__item-image-wrap" aria-hidden="true">
-                      <img className="cart-page__item-image" src={item.image} alt="" loading="lazy" />
+                      <img
+                        className="cart-page__item-image"
+                        src={item.imageUrl || DUMMY_IMAGES[item.category]}
+                        alt=""
+                        loading="lazy"
+                      />
                     </div>
 
                     <div className="cart-page__item-body">
