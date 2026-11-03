@@ -14,6 +14,7 @@ public record HddResponse(
         String brand,
         Integer price,
         String imageUrl,
+        Integer performanceScore,
         @JsonProperty("interface")
         String interfaceType,
         Integer capacity,
@@ -28,6 +29,7 @@ public record HddResponse(
                 hdd.getBrand(),
                 hdd.getPrice(),
                 hdd.getImageUrl(),
+                hdd.getPerformanceScore(),
                 hdd.getInterfaceType(),
                 hdd.getCapacity(),
                 hdd.getRpm(),

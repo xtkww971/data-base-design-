@@ -15,6 +15,7 @@ public record CpuDetailResponse(
         String brand,
         Integer price,
         String imageUrl,
+        Integer performanceScore,
         Specs specs) implements BaseProductDetail {
 
     /**
@@ -36,6 +37,7 @@ public record CpuDetailResponse(
                 cpu.getBrand(),
                 cpu.getPrice(),
                 cpu.getImageUrl(),
+                cpu.getPerformanceScore(),
                 new Specs(
                         cpu.getSocket(),
                         cpu.getCores(),

@@ -15,6 +15,7 @@ public record GraphicCardDetailResponse(
         String brand,
         Integer price,
         String imageUrl,
+        Integer performanceScore,
         Specs specs) implements BaseProductDetail {
 
     /**
@@ -37,6 +38,7 @@ public record GraphicCardDetailResponse(
                 graphicCard.getBrand(),
                 graphicCard.getPrice(),
                 graphicCard.getImageUrl(),
+                graphicCard.getPerformanceScore(),
                 new Specs(
                         graphicCard.getChipset(),
                         graphicCard.getMemoryType(),

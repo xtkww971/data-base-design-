@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 메인보드 상세 스펙. 공통 속성(name, brand, price, imageUrl)은 modules 테이블에 있다.
+ * 메인보드 상세 스펙. 공통 속성(name, brand, price, imageUrl, performanceScore)은 modules 테이블에 있다.
  */
 @Table(name = "main_boards")
 @Entity
@@ -37,9 +37,9 @@ public class MainBoard extends ProductModule {
     private String chipset;
 
     @Builder
-    private MainBoard(Category category, String name, String brand, Integer price, String imageUrl, String socket,
+    private MainBoard(Category category, String name, String brand, Integer price, String imageUrl, Integer performanceScore, String socket,
             String formFactor, String memorySpec, Integer memorySlots, String chipset) {
-        super(category, name, brand, price, imageUrl);
+        super(category, name, brand, price, imageUrl, performanceScore);
         this.socket = socket;
         this.formFactor = formFactor;
         this.memorySpec = memorySpec;
@@ -47,9 +47,9 @@ public class MainBoard extends ProductModule {
         this.chipset = chipset;
     }
 
-    public void update(String name, String brand, Integer price, String imageUrl, String socket, String formFactor,
+    public void update(String name, String brand, Integer price, String imageUrl, Integer performanceScore, String socket, String formFactor,
             String memorySpec, Integer memorySlots, String chipset) {
-        updateModule(name, brand, price, imageUrl);
+        updateModule(name, brand, price, imageUrl, performanceScore);
         this.socket = socket;
         this.formFactor = formFactor;
         this.memorySpec = memorySpec;

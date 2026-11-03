@@ -2,6 +2,7 @@ from langgraph.graph import StateGraph, START, END
 
 from src.state import GraphState
 from src.nodes.example_retriever import example_retriever
+from src.nodes.keyword_extractor import keyword_extractor
 from src.nodes.query_generator import query_generator
 from src.nodes.schema_retriever import schema_retriever
 from src.nodes.validator import validator
@@ -19,12 +20,14 @@ def route_after_validation(state: GraphState)-> str:
 def build_graph():
     builder = StateGraph(GraphState)
 
+    builder.add_node("keyword_extractor", keyword_extractor)
     builder.add_node("schema_retriever", schema_retriever)
     builder.add_node("example_retriever", example_retriever)
     builder.add_node("query_generator", query_generator)
     builder.add_node("validator", validator)
 
-    builder.add_edge(START, "schema_retriever")
+    builder.add_edge(START, "keyword_extractor")
+    builder.add_edge("keyword_extractor", "schema_retriever")
     builder.add_edge("schema_retriever", "example_retriever")
     builder.add_edge("example_retriever", "query_generator")
     builder.add_edge("query_generator", "validator" )

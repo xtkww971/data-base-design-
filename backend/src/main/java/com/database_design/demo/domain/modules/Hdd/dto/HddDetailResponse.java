@@ -16,6 +16,7 @@ public record HddDetailResponse(
         String brand,
         Integer price,
         String imageUrl,
+        Integer performanceScore,
         Specs specs) implements BaseProductDetail {
 
     /**
@@ -37,6 +38,7 @@ public record HddDetailResponse(
                 hdd.getBrand(),
                 hdd.getPrice(),
                 hdd.getImageUrl(),
+                hdd.getPerformanceScore(),
                 new Specs(
                         hdd.getInterfaceType(),
                         hdd.getCapacity(),

@@ -50,7 +50,7 @@ public class GraphicCardService {
     @Transactional
     public GraphicCardResponse update(Long moduleId, GraphicCardRequest request) {
         GraphicCard graphicCard = findById(moduleId);
-        graphicCard.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.chipset(),
+        graphicCard.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.performanceScore(), request.chipset(),
             request.memoryType(), request.memoryCapacity(), request.length(), request.recommendedPower(),
             request.ports());
         return GraphicCardResponse.from(graphicCard);

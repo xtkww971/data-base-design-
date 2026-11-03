@@ -13,6 +13,7 @@ public record PowerResponse(
         String brand,
         Integer price,
         String imageUrl,
+        Integer performanceScore,
         Integer ratedPower,
         String certification,
         String formFactor) {
@@ -25,6 +26,7 @@ public record PowerResponse(
                 power.getBrand(),
                 power.getPrice(),
                 power.getImageUrl(),
+                power.getPerformanceScore(),
                 power.getRatedPower(),
                 power.getCertification(),
                 power.getFormFactor());

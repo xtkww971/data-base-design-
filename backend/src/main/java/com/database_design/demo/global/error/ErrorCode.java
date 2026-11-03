@@ -45,7 +45,12 @@ public enum ErrorCode {
     HDD_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 HDD입니다."),
 
     // 부품(모듈) - 모니터
-    MONITOR_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 모니터입니다.");
+    MONITOR_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 모니터입니다."),
+
+    // 자연어 질의(nl2sql)
+    NL2SQL_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "자연어 처리 서버에 연결할 수 없습니다."),
+    NL2SQL_GENERATION_FAILED(HttpStatus.UNPROCESSABLE_CONTENT, "질문을 이해하지 못했습니다. 다르게 표현해 주세요."),
+    NL2SQL_EXECUTION_FAILED(HttpStatus.UNPROCESSABLE_CONTENT, "질문에 대한 결과를 조회하지 못했습니다.");
 
     private final HttpStatus status;
     private final String message;

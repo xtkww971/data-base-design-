@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
-import './AuthPage.css';
+import './SignUpPage.css';
 import { checkLoginId, signUp } from '../api/authApi.js';
 
 // 백엔드 SignUpRequest 검증 규칙과 같게 맞춘다.
@@ -91,30 +91,29 @@ export default function SignUpPage() {
 
   const renderFieldMessage = (name, hint) => {
     if (fieldErrors[name]) {
-      return <p className="auth-page__message is-error">{fieldErrors[name]}</p>;
+      return <p className="signup-page__message is-error">{fieldErrors[name]}</p>;
     }
-    return hint ? <p className="auth-page__message">{hint}</p> : null;
+    return hint ? <p className="signup-page__message">{hint}</p> : null;
   };
 
   return (
-    <div className="auth-page">
+    <div className="signup-page">
       <Header />
 
-      <main className="auth-page__content">
-        <section className="auth-page__panel">
-          <span className="auth-page__eyebrow">회원가입</span>
+      <main className="signup-page__content">
+        <section className="signup-page__panel">
           <h1>새 계정을 만들어 보세요.</h1>
-          <p className="auth-page__subtitle">가입하면 AI 추천 견적과 검색한 부품을 내 계정으로 관리할 수 있어요.</p>
+          <p className="signup-page__subtitle">가입하면 AI 추천 견적과 검색한 부품을 내 계정으로 관리할 수 있어요.</p>
 
-          <form className="auth-page__form" onSubmit={handleSubmit} noValidate>
-            {errorMessage && <p className="auth-page__alert" role="alert">{errorMessage}</p>}
+          <form className="signup-page__form" onSubmit={handleSubmit} noValidate>
+            {errorMessage && <p className="signup-page__alert" role="alert">{errorMessage}</p>}
 
-            <div className="auth-page__field">
-              <label className="auth-page__label" htmlFor="signup-login-id">아이디</label>
-              <div className="auth-page__input-row">
+            <div className="signup-page__field">
+              <label className="signup-page__label" htmlFor="signup-login-id">아이디</label>
+              <div className="signup-page__input-row">
                 <input
                   id="signup-login-id"
-                  className={`auth-page__input ${fieldErrors.loginId || idCheckResult === false ? 'is-invalid' : ''}`}
+                  className={`signup-page__input ${fieldErrors.loginId || idCheckResult === false ? 'is-invalid' : ''}`}
                   type="text"
                   autoComplete="username"
                   value={form.loginId}
@@ -123,7 +122,7 @@ export default function SignUpPage() {
                 />
                 <button
                   type="button"
-                  className="auth-page__check-button"
+                  className="signup-page__check-button"
                   onClick={handleCheckLoginId}
                   disabled={idCheck.isChecking || !form.loginId}
                 >
@@ -131,19 +130,19 @@ export default function SignUpPage() {
                 </button>
               </div>
               {fieldErrors.loginId ? (
-                <p className="auth-page__message is-error">{fieldErrors.loginId}</p>
+                <p className="signup-page__message is-error">{fieldErrors.loginId}</p>
               ) : idCheckResult === true ? (
-                <p className="auth-page__message is-success">사용할 수 있는 아이디입니다.</p>
+                <p className="signup-page__message is-success">사용할 수 있는 아이디입니다.</p>
               ) : idCheckResult === false ? (
-                <p className="auth-page__message is-error">이미 사용 중인 아이디입니다.</p>
+                <p className="signup-page__message is-error">이미 사용 중인 아이디입니다.</p>
               ) : null}
             </div>
 
-            <div className="auth-page__field">
-              <label className="auth-page__label" htmlFor="signup-password">비밀번호</label>
+            <div className="signup-page__field">
+              <label className="signup-page__label" htmlFor="signup-password">비밀번호</label>
               <input
                 id="signup-password"
-                className={`auth-page__input ${fieldErrors.password ? 'is-invalid' : ''}`}
+                className={`signup-page__input ${fieldErrors.password ? 'is-invalid' : ''}`}
                 type="password"
                 autoComplete="new-password"
                 value={form.password}
@@ -153,11 +152,11 @@ export default function SignUpPage() {
               {renderFieldMessage('password')}
             </div>
 
-            <div className="auth-page__field">
-              <label className="auth-page__label" htmlFor="signup-password-confirm">비밀번호 확인</label>
+            <div className="signup-page__field">
+              <label className="signup-page__label" htmlFor="signup-password-confirm">비밀번호 확인</label>
               <input
                 id="signup-password-confirm"
-                className={`auth-page__input ${fieldErrors.passwordConfirm ? 'is-invalid' : ''}`}
+                className={`signup-page__input ${fieldErrors.passwordConfirm ? 'is-invalid' : ''}`}
                 type="password"
                 autoComplete="new-password"
                 value={form.passwordConfirm}
@@ -167,11 +166,11 @@ export default function SignUpPage() {
               {renderFieldMessage('passwordConfirm')}
             </div>
 
-            <div className="auth-page__field">
-              <label className="auth-page__label" htmlFor="signup-nickname">닉네임</label>
+            <div className="signup-page__field">
+              <label className="signup-page__label" htmlFor="signup-nickname">닉네임</label>
               <input
                 id="signup-nickname"
-                className={`auth-page__input ${fieldErrors.nickname ? 'is-invalid' : ''}`}
+                className={`signup-page__input ${fieldErrors.nickname ? 'is-invalid' : ''}`}
                 type="text"
                 autoComplete="nickname"
                 value={form.nickname}
@@ -181,12 +180,12 @@ export default function SignUpPage() {
               {renderFieldMessage('nickname')}
             </div>
 
-            <button type="submit" className="auth-page__submit" disabled={isSubmitting}>
+            <button type="submit" className="signup-page__submit" disabled={isSubmitting}>
               {isSubmitting ? '가입 중...' : '회원가입'}
             </button>
           </form>
 
-          <p className="auth-page__switch">
+          <p className="signup-page__switch">
             이미 계정이 있으신가요?
             <Link to="/login" state={location.state?.from ? { from: location.state.from } : undefined}>
               로그인

@@ -5,6 +5,7 @@ import com.database_design.demo.domain.modules.common.entity.Category;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -25,6 +26,9 @@ public record SsdRequest(
 
         @Size(max = 500, message = "이미지 주소는 500자 이하여야 합니다.")
         String imageUrl,
+
+        @PositiveOrZero(message = "성능 점수는 0 이상이어야 합니다.")
+        Integer performanceScore,
 
         @NotBlank(message = "규격은 필수입니다.")
         @Size(max = 20, message = "규격은 20자 이하여야 합니다.")
@@ -49,6 +53,7 @@ public record SsdRequest(
                 .brand(brand)
                 .price(price)
                 .imageUrl(imageUrl)
+                .performanceScore(performanceScore)
                 .formFactor(formFactor)
                 .capacity(capacity)
                 .readSpeed(readSpeed)

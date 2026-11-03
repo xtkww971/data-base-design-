@@ -57,8 +57,8 @@ MYSQL_DATABASE=data_base_design
 MYSQL_USER=app
 MYSQL_PASSWORD=원하는_app_비밀번호
 
-# 내 PC에서 MySQL에 접속할 포트. 이미 MySQL이 설치돼 있으면 3307로 바꾸세요.
-MYSQL_PORT=3306
+# 내 PC에서 MySQL에 접속할 포트. 로컬 MySQL(3306)과 겹치지 않도록 기본 3307을 씁니다.
+MYSQL_PORT=3307
 
 # ---------- nl2sql (Python) ----------
 # https://console.groq.com/keys 에서 발급
@@ -71,7 +71,7 @@ GROQ_API_KEY=gsk_로_시작하는_키
 | `MYSQL_DATABASE` | `data_base_design` 고정 | 선택 | `data_base_design` |
 | `MYSQL_USER` | 앱이 쓸 계정 이름. **`root` 금지** | 선택 | `app` |
 | `MYSQL_PASSWORD` | 위 계정의 비밀번호 | 권장 | `app` |
-| `MYSQL_PORT` | 내 PC 쪽 포트. 보통 `3306`, 충돌 나면 `3307` | 선택 | `3306` |
+| `MYSQL_PORT` | 내 PC 쪽 포트. 3307도 사용 중이면 다른 번호로 | 선택 | `3307` |
 | `GROQ_API_KEY` | Groq API 키 | nl2sql 실행 시 필수 | LLM 호출 실패 |
 
 비밀번호 값은 팀원끼리 맞출 필요가 없습니다. **내 `.env`와 내 `application-local.yml`만 서로 일치**하면 됩니다.
@@ -86,7 +86,7 @@ GROQ_API_KEY=gsk_로_시작하는_키
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/data_base_design?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3307/data_base_design?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: app                  # .env 의 MYSQL_USER
     password: 원하는_app_비밀번호    # .env 의 MYSQL_PASSWORD
@@ -94,7 +94,7 @@ spring:
     show-sql: true
 ```
 
-- `.env`에서 `MYSQL_PORT=3307`로 바꿨다면 url의 `localhost:3306`도 `localhost:3307`로 바꿉니다.
+- `.env`에서 `MYSQL_PORT`를 다른 값으로 바꿨다면 url의 `localhost:3307`도 같은 포트로 바꿉니다.
 - 테이블은 직접 만들 필요 없습니다. 백엔드를 실행하면 Flyway가 `db/migration`의 SQL을 자동으로 적용합니다.
 
 ---
@@ -142,7 +142,7 @@ PC를 재부팅해도 Docker Desktop만 켜져 있으면 MySQL이 자동으로 �
 | 항목 | 값 |
 |---|---|
 | Host | `localhost` |
-| Port | `.env`의 `MYSQL_PORT` (기본 `3306`) |
+| Port | `.env`의 `MYSQL_PORT` (기본 `3307`) |
 | User / Password | `.env`의 `MYSQL_USER` / `MYSQL_PASSWORD` |
 | Database | `data_base_design` |
 
@@ -153,10 +153,9 @@ PC를 재부팅해도 Docker Desktop만 켜져 있으면 MySQL이 자동으로 �
 **`error during connect` / `Cannot connect to the Docker daemon`**
 → Docker Desktop이 꺼져 있습니다. 앱을 켜고 고래 아이콘이 멈출 때까지 기다린 뒤 다시 실행하세요.
 
-**`port is already allocated` / `Bind for 0.0.0.0:3306 failed`**
-→ 내 PC에 이미 MySQL이 설치돼서 3306을 쓰고 있습니다. 둘 중 하나를 하세요.
-- `.env`에서 `MYSQL_PORT=3307`로 바꾸고 `application-local.yml`의 url 포트도 `3307`로 바꾸기
-- 또는 기존에 설치된 MySQL 서비스를 중지하기
+**`port is already allocated` / `Bind for 0.0.0.0:3307 failed`**
+→ 내 PC에서 다른 프로그램이 3307을 쓰고 있습니다.
+- `.env`에서 `MYSQL_PORT`를 비어 있는 포트(예: `3308`)로 바꾸고 `application-local.yml`의 url 포트도 똑같이 바꾸기
 
 **`.env`에서 비밀번호를 바꿨는데 `Access denied`가 뜬다**
 → MySQL 컨테이너는 **처음 만들어질 때만** `.env`의 계정/비밀번호를 적용합니다. 나중에 바꾸면 반영되지 않습니다.

@@ -50,7 +50,7 @@ public class RamService {
     @Transactional
     public RamResponse update(Long moduleId, RamRequest request) {
         Ram ram = findById(moduleId);
-        ram.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.memorySpec(),
+        ram.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.performanceScore(), request.memorySpec(),
             request.capacity(), request.clock(), request.packageCount());
         return RamResponse.from(ram);
     }

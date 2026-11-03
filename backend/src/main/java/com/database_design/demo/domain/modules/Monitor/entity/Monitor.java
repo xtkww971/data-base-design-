@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 모니터 상세 스펙. 공통 속성(name, brand, price, imageUrl)은 modules 테이블에 있다.
+ * 모니터 상세 스펙. 공통 속성(name, brand, price, imageUrl, performanceScore)은 modules 테이블에 있다.
  */
 @Table(name = "monitors")
 @Entity
@@ -38,9 +38,9 @@ public class Monitor extends ProductModule {
     private String aspectRatio;
 
     @Builder
-    private Monitor(Category category, String name, String brand, Integer price, String imageUrl,
+    private Monitor(Category category, String name, String brand, Integer price, String imageUrl, Integer performanceScore,
             BigDecimal screenSize, String resolution, String panelType, Integer refreshRate, String aspectRatio) {
-        super(category, name, brand, price, imageUrl);
+        super(category, name, brand, price, imageUrl, performanceScore);
         this.screenSize = screenSize;
         this.resolution = resolution;
         this.panelType = panelType;
@@ -48,9 +48,9 @@ public class Monitor extends ProductModule {
         this.aspectRatio = aspectRatio;
     }
 
-    public void update(String name, String brand, Integer price, String imageUrl, BigDecimal screenSize,
+    public void update(String name, String brand, Integer price, String imageUrl, Integer performanceScore, BigDecimal screenSize,
             String resolution, String panelType, Integer refreshRate, String aspectRatio) {
-        updateModule(name, brand, price, imageUrl);
+        updateModule(name, brand, price, imageUrl, performanceScore);
         this.screenSize = screenSize;
         this.resolution = resolution;
         this.panelType = panelType;

@@ -5,6 +5,7 @@ import com.database_design.demo.domain.modules.common.entity.Category;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -25,6 +26,9 @@ public record GraphicCardRequest(
 
         @Size(max = 500, message = "이미지 주소는 500자 이하여야 합니다.")
         String imageUrl,
+
+        @PositiveOrZero(message = "성능 점수는 0 이상이어야 합니다.")
+        Integer performanceScore,
 
         @NotBlank(message = "칩셋은 필수입니다.")
         @Size(max = 50, message = "칩셋은 50자 이하여야 합니다.")
@@ -57,6 +61,7 @@ public record GraphicCardRequest(
                 .brand(brand)
                 .price(price)
                 .imageUrl(imageUrl)
+                .performanceScore(performanceScore)
                 .chipset(chipset)
                 .memoryType(memoryType)
                 .memoryCapacity(memoryCapacity)

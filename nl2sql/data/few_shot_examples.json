@@ -1,22 +1,110 @@
 [
   {
-    "question": "가장 최근에 가입한 회원 5명의 이름을 알려줘",
-    "sql": "SELECT name FROM members ORDER BY joined_at DESC LIMIT 5"
+    "question": "가장 저렴한 CPU 5개 알려줘",
+    "sql": "SELECT m.name, m.brand, m.price FROM modules m JOIN cpus c ON c.module_id = m.module_id ORDER BY m.price ASC LIMIT 5"
   },
   {
-    "question": "VIP 등급 회원은 몇 명이야?",
-    "sql": "SELECT COUNT(*) AS vip_count FROM members WHERE grade = 'VIP'"
+    "question": "카테고리별 부품이 몇 개씩 있어?",
+    "sql": "SELECT ct.category_name, COUNT(*) AS part_count FROM categories ct JOIN modules m ON m.category_id = ct.category_id GROUP BY ct.category_id, ct.category_name ORDER BY part_count DESC"
   },
   {
-    "question": "이번 달 총 매출을 알려줘",
-    "sql": "SELECT SUM(total_price) AS revenue FROM orders WHERE status = 'PAID' AND strftime('%Y-%m', ordered_at) = strftime('%Y-%m', 'now')"
+    "question": "카테고리별 평균 가격을 보여줘",
+    "sql": "SELECT ct.category_name, ROUND(AVG(m.price)) AS avg_price FROM categories ct JOIN modules m ON m.category_id = ct.category_id GROUP BY ct.category_id, ct.category_name ORDER BY avg_price DESC"
   },
   {
-    "question": "가장 많이 팔린 상품 3개는?",
-    "sql": "SELECT p.name, SUM(oi.quantity) AS total_qty FROM order_items oi JOIN products p ON p.id = oi.product_id GROUP BY p.id ORDER BY total_qty DESC LIMIT 3"
+    "question": "가장 비싼 부품 5개와 카테고리를 알려줘",
+    "sql": "SELECT m.name, ct.category_name, m.price FROM modules m JOIN categories ct ON ct.category_id = m.category_id ORDER BY m.price DESC LIMIT 5"
   },
   {
-    "question": "회원별 총 구매 금액을 많은 순으로 보여줘",
-    "sql": "SELECT m.name, SUM(o.total_price) AS total_spent FROM members m JOIN orders o ON o.member_id = m.id WHERE o.status = 'PAID' GROUP BY m.id ORDER BY total_spent DESC"
+    "question": "삼성전자 제품은 몇 개야?",
+    "sql": "SELECT COUNT(*) AS samsung_count FROM modules WHERE brand = '삼성전자'"
+  },
+  {
+    "question": "내장 그래픽이 있는 CPU 중 20만원 이하 제품 보여줘",
+    "sql": "SELECT m.name, m.brand, m.price, c.cores, c.threads FROM modules m JOIN cpus c ON c.module_id = m.module_id WHERE c.has_graphics = 1 AND m.price <= 200000 ORDER BY m.price ASC"
+  },
+  {
+    "question": "인텔 CPU 중 코어가 가장 많은 제품 3개는?",
+    "sql": "SELECT m.name, c.cores, c.threads, m.price FROM modules m JOIN cpus c ON c.module_id = m.module_id WHERE m.brand = '인텔' ORDER BY c.cores DESC, m.price ASC LIMIT 3"
+  },
+  {
+    "question": "클럭이 가장 높은 CPU 3개 알려줘",
+    "sql": "SELECT m.name, c.clock_speed, m.price FROM modules m JOIN cpus c ON c.module_id = m.module_id ORDER BY CAST(REPLACE(c.clock_speed, 'GHz', '') AS DECIMAL(3,1)) DESC, m.price ASC LIMIT 3"
+  },
+  {
+    "question": "코어 하나당 가격이 가장 저렴한 CPU 3개는?",
+    "sql": "SELECT m.name, c.cores, m.price, ROUND(m.price / c.cores) AS price_per_core FROM modules m JOIN cpus c ON c.module_id = m.module_id ORDER BY m.price / c.cores ASC LIMIT 3"
+  },
+  {
+    "question": "소켓별 CPU가 몇 개씩 있어?",
+    "sql": "SELECT socket, COUNT(*) AS cpu_count FROM cpus GROUP BY socket ORDER BY cpu_count DESC"
+  },
+  {
+    "question": "AM5 소켓이면서 DDR5를 지원하는 메인보드를 싼 순서로 보여줘",
+    "sql": "SELECT m.name, m.brand, m.price, mb.chipset, mb.form_factor FROM modules m JOIN main_boards mb ON mb.module_id = m.module_id WHERE mb.socket = 'AM5' AND mb.memory_spec = 'DDR5' ORDER BY m.price ASC"
+  },
+  {
+    "question": "라이젠5 7500F랑 호환되는 메인보드 추천해줘",
+    "sql": "SELECT mm.name, mm.brand, mm.price, mb.chipset, mb.form_factor FROM modules mc JOIN cpus c ON c.module_id = mc.module_id JOIN main_boards mb ON mb.socket = c.socket JOIN modules mm ON mm.module_id = mb.module_id WHERE mc.name LIKE '%7500F%' ORDER BY mm.price ASC"
+  },
+  {
+    "question": "B650 칩셋 메인보드와 호환되는 램을 싼 순서로 보여줘",
+    "sql": "SELECT DISTINCT mr.name, mr.price, r.memory_spec, r.capacity, r.clock FROM main_boards mb JOIN rams r ON r.memory_spec = mb.memory_spec JOIN modules mr ON mr.module_id = r.module_id WHERE mb.chipset = 'B650' ORDER BY mr.price ASC"
+  },
+  {
+    "question": "DDR5 32GB 램 중 가장 저렴한 3개는?",
+    "sql": "SELECT m.name, m.price, r.clock, r.package_count FROM modules m JOIN rams r ON r.module_id = m.module_id WHERE r.memory_spec = 'DDR5' AND r.capacity = 32 ORDER BY m.price ASC LIMIT 3"
+  },
+  {
+    "question": "VRAM 16GB 이상인 그래픽카드를 가격 낮은 순으로 보여줘",
+    "sql": "SELECT m.name, g.chipset, g.memory_type, g.memory_capacity, m.price FROM modules m JOIN graphic_cards g ON g.module_id = m.module_id WHERE g.memory_capacity >= 16 ORDER BY m.price ASC"
+  },
+  {
+    "question": "길이가 300mm 이하인 그래픽카드 알려줘",
+    "sql": "SELECT m.name, g.chipset, g.length_mm, m.price FROM modules m JOIN graphic_cards g ON g.module_id = m.module_id WHERE g.length_mm <= 300 ORDER BY g.length_mm ASC"
+  },
+  {
+    "question": "그래픽카드 칩셋별 최저가를 보여줘",
+    "sql": "SELECT g.chipset, MIN(m.price) AS min_price FROM modules m JOIN graphic_cards g ON g.module_id = m.module_id GROUP BY g.chipset ORDER BY min_price ASC"
+  },
+  {
+    "question": "RTX 5070에 맞는 파워 추천해줘",
+    "sql": "SELECT m.name, m.price, p.rated_power, p.certification FROM modules m JOIN power p ON p.module_id = m.module_id WHERE p.rated_power >= (SELECT MAX(recommended_power) FROM graphic_cards WHERE chipset = 'GeForce RTX 5070') ORDER BY m.price ASC"
+  },
+  {
+    "question": "정격 출력 750W 이상이고 골드 등급 이상인 파워를 보여줘",
+    "sql": "SELECT m.name, p.rated_power, p.certification, m.price FROM modules m JOIN power p ON p.module_id = m.module_id WHERE p.rated_power >= 750 AND p.certification IN ('80PLUS GOLD', '80PLUS PLATINUM', '80PLUS TITANIUM') ORDER BY m.price ASC"
+  },
+  {
+    "question": "1TB 이상 SSD 중 읽기 속도가 가장 빠른 3개는?",
+    "sql": "SELECT m.name, s.capacity, s.read_speed, m.price FROM modules m JOIN ssds s ON s.module_id = m.module_id WHERE s.capacity >= 1000 ORDER BY s.read_speed DESC LIMIT 3"
+  },
+  {
+    "question": "10만원 이하 M.2 SSD 보여줘",
+    "sql": "SELECT m.name, s.capacity, s.read_speed, s.write_speed, m.price FROM modules m JOIN ssds s ON s.module_id = m.module_id WHERE s.form_factor = 'M.2 2280' AND m.price <= 100000 ORDER BY m.price ASC"
+  },
+  {
+    "question": "브랜드별 SSD가 몇 개씩 있어?",
+    "sql": "SELECT m.brand, COUNT(*) AS ssd_count FROM modules m JOIN ssds s ON s.module_id = m.module_id GROUP BY m.brand ORDER BY ssd_count DESC"
+  },
+  {
+    "question": "8TB 이상 HDD 중 가장 저렴한 제품은?",
+    "sql": "SELECT m.name, h.capacity, h.rpm, m.price FROM modules m JOIN hdds h ON h.module_id = m.module_id WHERE h.capacity >= 8 ORDER BY m.price ASC LIMIT 1"
+  },
+  {
+    "question": "27인치 이상 QHD 144Hz 이상 모니터 보여줘",
+    "sql": "SELECT m.name, mo.screen_size, mo.resolution, mo.refresh_rate, mo.panel_type, m.price FROM modules m JOIN monitors mo ON mo.module_id = m.module_id WHERE mo.screen_size >= 27 AND mo.resolution = '2560x1440' AND mo.refresh_rate >= 144 ORDER BY m.price ASC"
+  },
+  {
+    "question": "가장 비싼 OLED 모니터 3개는?",
+    "sql": "SELECT m.name, mo.screen_size, mo.resolution, mo.refresh_rate, m.price FROM modules m JOIN monitors mo ON mo.module_id = m.module_id WHERE mo.panel_type = 'OLED' ORDER BY m.price DESC LIMIT 3"
+  },
+  {
+    "question": "제조사별 모니터 평균 가격을 알려줘",
+    "sql": "SELECT m.brand, ROUND(AVG(m.price)) AS avg_price FROM modules m JOIN monitors mo ON mo.module_id = m.module_id GROUP BY m.brand ORDER BY avg_price DESC"
+  },
+  {
+    "question": "가장 최근에 가입한 유저 5명의 닉네임을 알려줘",
+    "sql": "SELECT nickname FROM users ORDER BY created_at DESC LIMIT 5"
   }
 ]

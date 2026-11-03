@@ -50,7 +50,7 @@ public class MonitorService {
     @Transactional
     public MonitorResponse update(Long moduleId, MonitorRequest request) {
         Monitor monitor = findById(moduleId);
-        monitor.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.screenSize(),
+        monitor.update(request.name(), request.brand(), request.price(), request.imageUrl(), request.performanceScore(), request.screenSize(),
             request.resolution(), request.panelType(), request.refreshRate(), request.aspectRatio());
         return MonitorResponse.from(monitor);
     }

@@ -4,6 +4,29 @@ import Footer from './components/Footer.jsx';
 import './SearchPage.css';
 import { PRODUCT_CATEGORIES } from '../types/productDetail.ts';
 import { searchProducts } from '../api/productApi.js';
+import { getSpecEntries } from '../utils/productSpecs.js';
+import dummyCpuImage from '../assets/dummy_cpu.webp';
+import dummyMainboardImage from '../assets/dummy_motherbored.webp';
+import dummyRamImage from '../assets/dummy_ram.jpg';
+import dummyGpuImage from '../assets/dummy_gpu.jpg';
+import dummyPowerImage from '../assets/dummy_power.webp';
+import dummySsdImage from '../assets/dummy_ssd.jpg';
+import dummyHddImage from '../assets/dummy_hdd.webp';
+import dummyMonitorImage from '../assets/dummy_monitor.jpg';
+
+// 제품 이미지가 없을 때 카테고리별로 대신 보여주는 더미 이미지.
+const DUMMY_IMAGES = {
+  CPU: dummyCpuImage,
+  MAINBOARD: dummyMainboardImage,
+  RAM: dummyRamImage,
+  GPU: dummyGpuImage,
+  POWER: dummyPowerImage,
+  SSD: dummySsdImage,
+  HDD: dummyHddImage,
+  MONITOR: dummyMonitorImage,
+};
+
+const getProductImage = (product) => product.imageUrl || DUMMY_IMAGES[product.category] || null;
 
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -88,74 +111,6 @@ const getProductSummary = (product) => {
   return '';
 };
 
-const getSpecEntries = (product) => {
-  const { specs } = product;
-
-  switch (product.category) {
-    case 'CPU':
-      return [
-        ['소켓', specs.socket],
-        ['코어', `${specs.cores}개`],
-        ['스레드', `${specs.threads}개`],
-        ['내장 그래픽', specs.hasGraphics ? '지원' : '미지원'],
-        ['클럭', specs.clockSpeed],
-      ];
-    case 'MAINBOARD':
-      return [
-        ['소켓', specs.socket],
-        ['폼팩터', specs.formFactor],
-        ['메모리 규격', specs.memorySpec],
-        ['메모리 슬롯', `${specs.memorySlots}개`],
-        ['칩셋', specs.chipset],
-      ];
-    case 'RAM':
-      return [
-        ['메모리 규격', specs.memorySpec],
-        ['용량', `${specs.capacity}GB`],
-        ['클럭', `${specs.clock}MHz`],
-        ['패키지 수', `${specs.packageCount}개`],
-      ];
-    case 'GPU':
-      return [
-        ['칩셋', specs.chipset],
-        ['메모리', `${specs.memoryType} ${specs.memoryCapacity}GB`],
-        ['길이', `${specs.length}mm`],
-        ['권장 파워', `${specs.recommendedPower}W`],
-        ['포트', specs.ports],
-      ];
-    case 'POWER':
-      return [
-        ['정격 출력', `${specs.ratedPower}W`],
-        ['80PLUS', specs.certification],
-        ['폼팩터', specs.formFactor],
-      ];
-    case 'SSD':
-      return [
-        ['규격', specs.formFactor],
-        ['용량', `${specs.capacity}GB`],
-        ['읽기 속도', `${specs.readSpeed}MB/s`],
-        ['쓰기 속도', `${specs.writeSpeed}MB/s`],
-      ];
-    case 'HDD':
-      return [
-        ['인터페이스', specs.interface],
-        ['용량', `${specs.capacity}TB`],
-        ['RPM', `${specs.rpm}RPM`],
-        ['버퍼', `${specs.bufferMemory}MB`],
-      ];
-    case 'MONITOR':
-      return [
-        ['화면 크기', `${specs.screenSize}인치`],
-        ['해상도', specs.resolution],
-        ['패널', specs.panelType],
-        ['주사율', `${specs.refreshRate}Hz`],
-        ['비율', specs.aspectRatio],
-      ];
-    default:
-      return [];
-  }
-};
-
 export default function SearchPage() {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
@@ -168,10 +123,12 @@ export default function SearchPage() {
 
   const queryKey = `${selectedCategory}|${debouncedSearchTerm}`;
   const currentResult = searchResult?.queryKey === queryKey ? searchResult : null;
-  const products = currentResult?.products ?? [];
-  const hasNext = currentResult?.hasNext ?? false;
-  const totalElements = currentResult?.totalElements ?? 0;
-  const errorMessage = currentResult?.errorMessage ?? null;
+  // 새 결과가 올 때까지 이전 결과를 그대로 보여준다. 목록을 비우면 페이지 높이가 줄어 푸터가 튀어 오른다.
+  const isRefreshing = searchResult !== null && currentResult === null;
+  const products = searchResult?.products ?? [];
+  const hasNext = searchResult?.hasNext ?? false;
+  const totalElements = searchResult?.totalElements ?? 0;
+  const errorMessage = searchResult?.errorMessage ?? null;
   const isLoading = currentResult === null || isLoadingMore;
 
   // 타이핑할 때마다 요청하지 않도록 입력이 멈춘 뒤에 검색어를 반영한다.
@@ -272,7 +229,7 @@ export default function SearchPage() {
             />
           </label>
 
-          <div className="search-page__layout">
+          <div className={`search-page__layout ${isRefreshing ? 'is-refreshing' : ''}`} aria-busy={isRefreshing}>
             <div className="search-page__results">
               {errorMessage ? (
                 <div className="search-page__empty-state">
@@ -290,8 +247,12 @@ export default function SearchPage() {
                     className={`search-page__card ${selectedProduct?.id === product.id ? 'is-selected' : ''}`}
                     onClick={() => setSelectedProductId(product.id)}
                   >
-                    {/* 제품 이미지는 아직 없어서 검정 박스로 대신한다. */}
-                    <div className="search-page__card-image-wrap" aria-hidden="true" />
+                    {/* 이미지를 못 찾은 제품은 검정 박스로 남는다. */}
+                    <div className="search-page__card-image-wrap" aria-hidden="true">
+                      {getProductImage(product) && (
+                        <img className="search-page__image" src={getProductImage(product)} alt="" loading="lazy" />
+                      )}
+                    </div>
 
                     <div className="search-page__card-body">
                       <div className="search-page__card-meta">
@@ -331,7 +292,11 @@ export default function SearchPage() {
 
             {selectedProduct && (
               <aside className="search-page__detail">
-                <div className="search-page__detail-image-wrap" aria-hidden="true" />
+                <div className="search-page__detail-image-wrap" aria-hidden="true">
+                  {getProductImage(selectedProduct) && (
+                    <img className="search-page__image" src={getProductImage(selectedProduct)} alt="" />
+                  )}
+                </div>
 
                 <div className="search-page__detail-header">
                   <span className="search-page__category-tag">{selectedProduct.category}</span>
