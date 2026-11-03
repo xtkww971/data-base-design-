@@ -1,9 +1,8 @@
-import json
-
 from src.state import GraphState
 from langchain_core.prompts import ChatPromptTemplate
 from src.chatmodel import get_llm
 from pydantic import Field, BaseModel
+from tools.budget import format_part_budgets
 
 class SQLGenerationResult(BaseModel):
     sql: str = Field(default="", description="생성된 SQL 쿼리. 마크다운 코드블록 없이 순수 SQL 텍스트만")
@@ -22,7 +21,6 @@ SYSTEM_PROMPT = """당신은 숙력된 SQL 엔지니어 입니다. 주어진 스
 6. sql을 생성하지 못했을 때는 그 이유를 error에 기록하세요.
 7. 제품명·제조사·가격은 `modules'테이블 에만 있으므로 부품 조회는 항상 `modules'테이블을 조인하세요.
 8. modules 테이블의 모든 컬럼은 SELECT절에 항상 포함 시키세요.
-9. 질문에서 분류한 키워드는 참고용입니다. 질문 원문과 다르면 질문 원문을 따르세요.
 
 """
 
@@ -34,9 +32,39 @@ HUMAN_PROMPT = """DB 스키마 정보:
 
 질문:
 {question}
+"""
 
-질문에서 분류한 키워드:
-{keywords}
+PROGRAM_SPEC_PROMPT = """사용자가 사용할 프로그램의 권장 사양:
+{program_specs}
+
+위 권장 사양을 충족하는 조건을 반영하세요.
+"""
+
+BUDGET_PROMPT = """사용자의 PC 전체 예산:
+최소 {budget_min}, 최대 {budget_max}
+
+이 금액은 부품 하나의 가격이 아니라 PC 전체 예산입니다. 다음 규칙을 따르세요.
+1. 부품 목록을 조회하는 쿼리에만 modules.price <= 최대 예산 조건을 추가하세요. 집계 조회나 유저 조회처럼 부품 목록이 아닌 쿼리에는 추가하지 마세요.
+2. 최소 예산은 가격 조건으로 사용하지 마세요.
+3. 최대 예산이 제한 없음이면 가격 상한을 두지 마세요.
+4. 질문 원문에 가격 조건이 있으면 질문 원문을 따르세요.
+"""
+
+PART_BUDGET_PROMPT = """사용자의 PC 전체 예산:
+최소 {budget_min}, 최대 {budget_max}
+
+사용자의 PC 용도: {usage}
+
+부품별 가격 상한:
+{part_budgets}
+
+이 금액은 이미 계산된 값이므로 그대로 사용하세요. 다음 규칙을 따르세요.
+1. 부품 목록을 조회하는 쿼리에만 가격 조건을 추가하세요. 집계 조회나 유저 조회처럼 부품 목록이 아닌 쿼리에는 추가하지 마세요.
+2. 조회하는 부품의 상한을 modules.price <= 상한 조건으로 추가하세요.
+3. 여러 부품을 함께 조회하면 categories.category_name으로 구분해 부품마다 자기 상한을 적용하세요. 예: (categories.category_name = 'GPU' AND modules.price <= GPU 상한) OR (categories.category_name = 'CPU' AND modules.price <= CPU 상한)
+4. 상한 목록에 없는 부품은 modules.price <= 최대 예산 조건을 사용하세요.
+5. 최소 예산은 가격 조건으로 사용하지 마세요.
+6. 질문 원문에 가격 조건이 있으면 질문 원문을 따르세요.
 """
 
 RETRY_PROMPT = """이전에 생성한 쿼리에 문제가 발생하였습니다. 오류를 참고해서 수정하세요
@@ -61,6 +89,10 @@ def query_generator(state: GraphState):
     example = state.get("query_example", "")
     query = state.get("query", "")
     error= state.get("error", "")
+    program_specs = state.get("program_specs", "")
+    budget_min = state.get("budget_min")
+    budget_max = state.get("budget_max")
+    usage = state.get("usage", "")
 
 
     message = [
@@ -71,9 +103,28 @@ def query_generator(state: GraphState):
     input_variables = {
         "schema_info": schema,
         "few_shot_examples": example,
-        "question": question,
-        "keywords": json.dumps(state.get("keywords", {}), ensure_ascii=False)
+        "question": question
     }
+
+    if program_specs:
+        message.append(("human", PROGRAM_SPEC_PROMPT))
+        input_variables["program_specs"] = program_specs
+
+    if budget_min is not None or budget_max is not None:
+        # 용도를 판단했으면 부품별 상한을, 아니면 전체 예산을 상한으로 사용
+        if usage and budget_max is not None:
+            message.append(("human", PART_BUDGET_PROMPT))
+            input_variables.update({
+                "usage": usage,
+                "part_budgets": format_part_budgets(usage, budget_max)
+            })
+        else:
+            message.append(("human", BUDGET_PROMPT))
+
+        input_variables.update({
+            "budget_min": f"{budget_min}원" if budget_min is not None else "제한 없음",
+            "budget_max": f"{budget_max}원" if budget_max is not None else "제한 없음"
+        })
 
     if state["retry_count"] > 0:
         message.append(("human", RETRY_PROMPT))
