@@ -4,6 +4,7 @@ import Footer from './components/Footer.jsx';
 import './SearchPage.css';
 import { PRODUCT_CATEGORIES } from '../types/productDetail.ts';
 import { searchProducts } from '../api/productApi.js';
+import { getSpecEntries } from '../utils/productSpecs.js';
 import dummyCpuImage from '../assets/dummy_cpu.webp';
 import dummyMainboardImage from '../assets/dummy_motherbored.webp';
 import dummyRamImage from '../assets/dummy_ram.jpg';
@@ -108,74 +109,6 @@ const getProductSummary = (product) => {
   }
 
   return '';
-};
-
-const getSpecEntries = (product) => {
-  const { specs } = product;
-
-  switch (product.category) {
-    case 'CPU':
-      return [
-        ['소켓', specs.socket],
-        ['코어', `${specs.cores}개`],
-        ['스레드', `${specs.threads}개`],
-        ['내장 그래픽', specs.hasGraphics ? '지원' : '미지원'],
-        ['클럭', specs.clockSpeed],
-      ];
-    case 'MAINBOARD':
-      return [
-        ['소켓', specs.socket],
-        ['폼팩터', specs.formFactor],
-        ['메모리 규격', specs.memorySpec],
-        ['메모리 슬롯', `${specs.memorySlots}개`],
-        ['칩셋', specs.chipset],
-      ];
-    case 'RAM':
-      return [
-        ['메모리 규격', specs.memorySpec],
-        ['용량', `${specs.capacity}GB`],
-        ['클럭', `${specs.clock}MHz`],
-        ['패키지 수', `${specs.packageCount}개`],
-      ];
-    case 'GPU':
-      return [
-        ['칩셋', specs.chipset],
-        ['메모리', `${specs.memoryType} ${specs.memoryCapacity}GB`],
-        ['길이', `${specs.length}mm`],
-        ['권장 파워', `${specs.recommendedPower}W`],
-        ['포트', specs.ports],
-      ];
-    case 'POWER':
-      return [
-        ['정격 출력', `${specs.ratedPower}W`],
-        ['80PLUS', specs.certification],
-        ['폼팩터', specs.formFactor],
-      ];
-    case 'SSD':
-      return [
-        ['규격', specs.formFactor],
-        ['용량', `${specs.capacity}GB`],
-        ['읽기 속도', `${specs.readSpeed}MB/s`],
-        ['쓰기 속도', `${specs.writeSpeed}MB/s`],
-      ];
-    case 'HDD':
-      return [
-        ['인터페이스', specs.interface],
-        ['용량', `${specs.capacity}TB`],
-        ['RPM', `${specs.rpm}RPM`],
-        ['버퍼', `${specs.bufferMemory}MB`],
-      ];
-    case 'MONITOR':
-      return [
-        ['화면 크기', `${specs.screenSize}인치`],
-        ['해상도', specs.resolution],
-        ['패널', specs.panelType],
-        ['주사율', `${specs.refreshRate}Hz`],
-        ['비율', specs.aspectRatio],
-      ];
-    default:
-      return [];
-  }
 };
 
 export default function SearchPage() {
