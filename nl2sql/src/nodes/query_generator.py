@@ -2,6 +2,7 @@ from src.state import GraphState
 from langchain_core.prompts import ChatPromptTemplate
 from src.chatmodel import get_llm
 from pydantic import Field, BaseModel
+from tools.budget import format_part_budgets
 
 class SQLGenerationResult(BaseModel):
     sql: str = Field(default="", description="생성된 SQL 쿼리. 마크다운 코드블록 없이 순수 SQL 텍스트만")
@@ -36,7 +37,7 @@ HUMAN_PROMPT = """DB 스키마 정보:
 PROGRAM_SPEC_PROMPT = """사용자가 사용할 프로그램의 권장 사양:
 {program_specs}
 
-부품을 조회하는 쿼리라면 위 권장 사양을 충족하는 조건을 반영하세요.
+위 권장 사양을 충족하는 조건을 반영하세요.
 """
 
 BUDGET_PROMPT = """사용자의 PC 전체 예산:
@@ -47,6 +48,24 @@ BUDGET_PROMPT = """사용자의 PC 전체 예산:
 2. 최소 예산은 가격 조건으로 사용하지 마세요.
 3. 최대 예산이 제한 없음이면 가격 상한을 두지 마세요.
 4. 질문 원문에 가격 조건이 있으면 질문 원문을 따르세요.
+"""
+
+PART_BUDGET_PROMPT = """사용자의 PC 전체 예산:
+최소 {budget_min}, 최대 {budget_max}
+
+사용자의 PC 용도: {usage}
+
+부품별 가격 상한:
+{part_budgets}
+
+이 금액은 이미 계산된 값이므로 그대로 사용하세요. 다음 규칙을 따르세요.
+1. 부품 목록을 조회하는 쿼리에만 가격 조건을 추가하세요. 집계 조회나 유저 조회처럼 부품 목록이 아닌 쿼리에는 추가하지 마세요.
+2. 조회하는 부품의 상한을 modules.price <= 상한 조건으로 추가하세요.
+3. 여러 부품을 함께 조회하면 categories.category_name으로 구분해 부품마다 자기 상한을 적용하세요. 예: (categories.category_name = 'GPU' AND modules.price <= GPU 상한) OR (categories.category_name = 'CPU' AND modules.price <= CPU 상한)
+4. 상한 목록에 없는 부품은 modules.price <= 최대 예산 조건을 사용하세요.
+5. 상한 목록에 GPU가 없으면 내장 그래픽을 사용하는 용도이므로, CPU를 조회할 때 cpus.has_graphics = 1 조건을 추가하세요.
+6. 최소 예산은 가격 조건으로 사용하지 마세요.
+7. 질문 원문에 가격 조건이 있으면 질문 원문을 따르세요.
 """
 
 RETRY_PROMPT = """이전에 생성한 쿼리에 문제가 발생하였습니다. 오류를 참고해서 수정하세요
@@ -74,6 +93,7 @@ def query_generator(state: GraphState):
     program_specs = state.get("program_specs", "")
     budget_min = state.get("budget_min")
     budget_max = state.get("budget_max")
+    usage = state.get("usage", "")
 
 
     message = [
@@ -92,7 +112,16 @@ def query_generator(state: GraphState):
         input_variables["program_specs"] = program_specs
 
     if budget_min is not None or budget_max is not None:
-        message.append(("human", BUDGET_PROMPT))
+        # 용도를 판단했으면 부품별 상한을, 아니면 전체 예산을 상한으로 사용
+        if usage and budget_max is not None:
+            message.append(("human", PART_BUDGET_PROMPT))
+            input_variables.update({
+                "usage": usage,
+                "part_budgets": format_part_budgets(usage, budget_max)
+            })
+        else:
+            message.append(("human", BUDGET_PROMPT))
+
         input_variables.update({
             "budget_min": f"{budget_min}원" if budget_min is not None else "제한 없음",
             "budget_max": f"{budget_max}원" if budget_max is not None else "제한 없음"
