@@ -63,9 +63,8 @@ PART_BUDGET_PROMPT = """사용자의 PC 전체 예산:
 2. 조회하는 부품의 상한을 modules.price <= 상한 조건으로 추가하세요.
 3. 여러 부품을 함께 조회하면 categories.category_name으로 구분해 부품마다 자기 상한을 적용하세요. 예: (categories.category_name = 'GPU' AND modules.price <= GPU 상한) OR (categories.category_name = 'CPU' AND modules.price <= CPU 상한)
 4. 상한 목록에 없는 부품은 modules.price <= 최대 예산 조건을 사용하세요.
-5. 상한 목록에 GPU가 없으면 내장 그래픽을 사용하는 용도이므로, CPU를 조회할 때 cpus.has_graphics = 1 조건을 추가하세요.
-6. 최소 예산은 가격 조건으로 사용하지 마세요.
-7. 질문 원문에 가격 조건이 있으면 질문 원문을 따르세요.
+5. 최소 예산은 가격 조건으로 사용하지 마세요.
+6. 질문 원문에 가격 조건이 있으면 질문 원문을 따르세요.
 """
 
 RETRY_PROMPT = """이전에 생성한 쿼리에 문제가 발생하였습니다. 오류를 참고해서 수정하세요
