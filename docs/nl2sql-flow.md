@@ -142,7 +142,7 @@ LLM(Groq `openai/gpt-oss-120b`, temperature 0)에 다음을 넣어 SQL을 만든
 | 그 외 `budget_max`만 있음 | 모든 부품에 `budget_max` |
 | `budget_max`가 없음 | 가격 상한 없음 |
 
-부품별 상한은 [budget.py](../nl2sql/tools/budget.py)의 `format_part_budgets()`가 코드로 계산해 프롬프트에 넣는다. 비율은 `BUDGET_RATIOS`에서 관리한다. 사무 용도에는 GPU 비율이 없으며, CPU 조회에 `cpus.has_graphics = 1` 조건을 추가한다.
+부품별 상한은 [budget.py](../nl2sql/tools/budget.py)의 `format_part_budgets()`가 코드로 계산해 프롬프트에 넣는다. 비율은 `BUDGET_RATIOS`에서 관리한다.
 
 상한은 부품별 후보를 거르는 조건이다. 고른 부품의 합계가 예산 안에 드는지와 부품 간 호환성은 확인하지 않는다.
 
