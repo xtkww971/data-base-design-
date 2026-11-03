@@ -1,0 +1,634 @@
+[
+  {
+    "name": "마인크래프트",
+    "aliases": [
+      "Minecraft",
+      "마크"
+    ],
+    "specs": {
+      "vram_gb": 0.25,
+      "ram_gb": 4,
+      "cpu_cores": 4,
+      "storage_gb": 4
+    }
+  },
+  {
+    "name": "리그 오브 레전드",
+    "aliases": [
+      "League of Legends",
+      "롤",
+      "LoL"
+    ],
+    "specs": {
+      "vram_gb": null,
+      "ram_gb": 4,
+      "cpu_cores": 4,
+      "storage_gb": 16
+    }
+  },
+  {
+    "name": "발로란트",
+    "aliases": [
+      "VALORANT",
+      "발로",
+      "Valorant"
+    ],
+    "specs": {
+      "vram_gb": 1,
+      "ram_gb": 4,
+      "cpu_cores": 2,
+      "storage_gb": null
+    }
+  },
+  {
+    "name": "오버워치 2",
+    "aliases": [
+      "Overwatch 2",
+      "오버워치",
+      "옵치",
+      "OW2"
+    ],
+    "specs": {
+      "vram_gb": 2,
+      "ram_gb": 8,
+      "cpu_cores": 4,
+      "storage_gb": 50
+    }
+  },
+  {
+    "name": "그랜드 테프트 오토 5",
+    "aliases": [
+      "Grand Theft Auto V",
+      "GTA 5",
+      "GTA V",
+      "지티에이 5",
+      "GTA5"
+    ],
+    "specs": {
+      "vram_gb": 2,
+      "ram_gb": 8,
+      "cpu_cores": 4,
+      "storage_gb": 72
+    }
+  },
+  {
+    "name": "위쳐 3: 와일드 헌트",
+    "aliases": [
+      "The Witcher 3: Wild Hunt",
+      "위쳐 3",
+      "위처 3",
+      "Witcher 3"
+    ],
+    "specs": {
+      "vram_gb": 2,
+      "ram_gb": 8,
+      "cpu_cores": 4,
+      "storage_gb": 35
+    }
+  },
+  {
+    "name": "메이플스토리",
+    "aliases": [
+      "MapleStory",
+      "메이플",
+      "Maple Story"
+    ],
+    "specs": {
+      "vram_gb": 2,
+      "ram_gb": 8,
+      "cpu_cores": 2,
+      "storage_gb": 50
+    }
+  },
+  {
+    "name": "로스트아크",
+    "aliases": [
+      "Lost Ark",
+      "로아",
+      "Lostark"
+    ],
+    "specs": {
+      "vram_gb": 2,
+      "ram_gb": 16,
+      "cpu_cores": 4,
+      "storage_gb": 50
+    }
+  },
+  {
+    "name": "콜 오브 듀티: 워존",
+    "aliases": [
+      "Call of Duty: Warzone",
+      "워존",
+      "콜오브듀티 워존",
+      "CoD Warzone"
+    ],
+    "specs": {
+      "vram_gb": 3,
+      "ram_gb": 12,
+      "cpu_cores": 4,
+      "storage_gb": 125
+    }
+  },
+  {
+    "name": "레드 데드 리뎀션 2",
+    "aliases": [
+      "Red Dead Redemption 2",
+      "레데리 2",
+      "레데리2",
+      "RDR2"
+    ],
+    "specs": {
+      "vram_gb": 3,
+      "ram_gb": 12,
+      "cpu_cores": 4,
+      "storage_gb": 150
+    }
+  },
+  {
+    "name": "배틀그라운드",
+    "aliases": [
+      "PLAYERUNKNOWN'S BATTLEGROUNDS",
+      "배그",
+      "PUBG",
+      "PUBG: BATTLEGROUNDS"
+    ],
+    "specs": {
+      "vram_gb": 3,
+      "ram_gb": 16,
+      "cpu_cores": 4,
+      "storage_gb": 30
+    }
+  },
+  {
+    "name": "갓 오브 워",
+    "aliases": [
+      "God of War",
+      "갓오브워",
+      "GoW"
+    ],
+    "specs": {
+      "vram_gb": 6,
+      "ram_gb": 8,
+      "cpu_cores": 4,
+      "storage_gb": 70
+    }
+  },
+  {
+    "name": "EA 스포츠 FC 27",
+    "aliases": [
+      "EA SPORTS FC 27",
+      "FC 27",
+      "FC27",
+      "EA FC 27"
+    ],
+    "specs": {
+      "vram_gb": 6,
+      "ram_gb": 12,
+      "cpu_cores": 4,
+      "storage_gb": 100
+    }
+  },
+  {
+    "name": "라스트 오브 어스 파트 1",
+    "aliases": [
+      "The Last of Us Part 1",
+      "라오어",
+      "라오어 1",
+      "TLOU",
+      "TLOU1",
+      "The Last of Us Part I"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 16,
+      "cpu_cores": 6,
+      "storage_gb": 100
+    }
+  },
+  {
+    "name": "발더스 게이트 3",
+    "aliases": [
+      "Baldur's Gate 3",
+      "발더스",
+      "발더스3",
+      "BG3"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 16,
+      "cpu_cores": 6,
+      "storage_gb": 150
+    }
+  },
+  {
+    "name": "엘든 링",
+    "aliases": [
+      "Elden Ring",
+      "엘든링",
+      "엘링"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 16,
+      "cpu_cores": 6,
+      "storage_gb": 60
+    }
+  },
+  {
+    "name": "붉은사막",
+    "aliases": [
+      "Crimson Desert",
+      "붉은 사막",
+      "크림슨 데저트"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 16,
+      "cpu_cores": 6,
+      "storage_gb": 100
+    }
+  },
+  {
+    "name": "사이버펑크 2077",
+    "aliases": [
+      "Cyberpunk 2077",
+      "사펑",
+      "사이펑",
+      "사이버펑크"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 16,
+      "cpu_cores": 8,
+      "storage_gb": 70
+    }
+  },
+  {
+    "name": "포트나이트",
+    "aliases": [
+      "Fortnite",
+      "포나",
+      "포트"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 16,
+      "cpu_cores": 2,
+      "storage_gb": null
+    }
+  },
+  {
+    "name": "팔월드",
+    "aliases": [
+      "Palworld",
+      "팰월드",
+      "팔 월드"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 32,
+      "cpu_cores": 8,
+      "storage_gb": 40
+    }
+  },
+  {
+    "name": "어도비 프리미어 프로",
+    "aliases": [
+      "Adobe Premiere Pro",
+      "프리미어",
+      "프리미어 프로",
+      "프프",
+      "Premiere"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 32,
+      "cpu_cores": 8,
+      "storage_gb": null
+    }
+  },
+  {
+    "name": "다빈치 리졸브",
+    "aliases": [
+      "DaVinci Resolve",
+      "다빈치",
+      "리졸브",
+      "Resolve"
+    ],
+    "specs": {
+      "vram_gb": 4,
+      "ram_gb": 32,
+      "cpu_cores": null,
+      "storage_gb": null
+    }
+  },
+  {
+    "name": "어도비 애프터 이펙트",
+    "aliases": [
+      "Adobe After Effects",
+      "에펙",
+      "애프터이펙트",
+      "AE",
+      "After Effects"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 32,
+      "cpu_cores": 6,
+      "storage_gb": null
+    }
+  },
+  {
+    "name": "어도비 포토샵",
+    "aliases": [
+      "Adobe Photoshop",
+      "포샵",
+      "포토샵",
+      "PS",
+      "Photoshop"
+    ],
+    "specs": {
+      "vram_gb": 4,
+      "ram_gb": 16,
+      "cpu_cores": null,
+      "storage_gb": 5
+    }
+  },
+  {
+    "name": "어도비 라이트룸 클래식",
+    "aliases": [
+      "Adobe Lightroom Classic",
+      "라룸",
+      "라이트룸",
+      "Lightroom",
+      "LrC"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 16,
+      "cpu_cores": null,
+      "storage_gb": null
+    }
+  },
+  {
+    "name": "어도비 일러스트레이터",
+    "aliases": [
+      "Adobe Illustrator",
+      "일러",
+      "일러스트",
+      "AI",
+      "Illustrator"
+    ],
+    "specs": {
+      "vram_gb": 4,
+      "ram_gb": 16,
+      "cpu_cores": null,
+      "storage_gb": 3
+    }
+  },
+  {
+    "name": "블렌더",
+    "aliases": [
+      "Blender",
+      "Blender 3D"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 32,
+      "cpu_cores": 8,
+      "storage_gb": null
+    }
+  },
+  {
+    "name": "오토데스크 마야",
+    "aliases": [
+      "Autodesk Maya",
+      "마야",
+      "Maya"
+    ],
+    "specs": {
+      "vram_gb": null,
+      "ram_gb": 16,
+      "cpu_cores": null,
+      "storage_gb": 7
+    }
+  },
+  {
+    "name": "오토데스크 3ds 맥스",
+    "aliases": [
+      "Autodesk 3ds Max",
+      "맥스",
+      "3D맥스",
+      "쓰리디맥스",
+      "3ds Max"
+    ],
+    "specs": {
+      "vram_gb": null,
+      "ram_gb": 8,
+      "cpu_cores": null,
+      "storage_gb": 9
+    }
+  },
+  {
+    "name": "언리얼 엔진 5",
+    "aliases": [
+      "Unreal Engine 5",
+      "언리얼",
+      "언리얼 엔진",
+      "UE5",
+      "Unreal"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 32,
+      "cpu_cores": 4,
+      "storage_gb": null
+    }
+  },
+  {
+    "name": "오토캐드",
+    "aliases": [
+      "AutoCAD",
+      "캐드",
+      "CAD",
+      "AutoCAD 2026"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 32,
+      "cpu_cores": null,
+      "storage_gb": 10
+    }
+  },
+  {
+    "name": "솔리드웍스",
+    "aliases": [
+      "SOLIDWORKS",
+      "솔웍",
+      "SolidWorks"
+    ],
+    "specs": {
+      "vram_gb": 16,
+      "ram_gb": 32,
+      "cpu_cores": 20,
+      "storage_gb": null
+    }
+  },
+  {
+    "name": "스케치업",
+    "aliases": [
+      "SketchUp",
+      "스업",
+      "SketchUp Pro"
+    ],
+    "specs": {
+      "vram_gb": 8,
+      "ram_gb": 8,
+      "cpu_cores": null,
+      "storage_gb": 6
+    }
+  },
+  {
+    "name": "오토데스크 레빗",
+    "aliases": [
+      "Autodesk Revit",
+      "레빗",
+      "Revit"
+    ],
+    "specs": {
+      "vram_gb": 6,
+      "ram_gb": 32,
+      "cpu_cores": null,
+      "storage_gb": 30
+    }
+  },
+  {
+    "name": "오토데스크 퓨전 360",
+    "aliases": [
+      "Autodesk Fusion",
+      "퓨전",
+      "퓨전360",
+      "Fusion 360"
+    ],
+    "specs": {
+      "vram_gb": 4,
+      "ram_gb": 16,
+      "cpu_cores": 4,
+      "storage_gb": 40
+    }
+  },
+  {
+    "name": "비주얼 스튜디오 코드",
+    "aliases": [
+      "Visual Studio Code",
+      "VS Code",
+      "VSCode",
+      "브스코",
+      "vscode"
+    ],
+    "specs": {
+      "vram_gb": null,
+      "ram_gb": 1,
+      "cpu_cores": null,
+      "storage_gb": 0.5
+    }
+  },
+  {
+    "name": "인텔리제이",
+    "aliases": [
+      "IntelliJ IDEA",
+      "IntelliJ",
+      "IDEA"
+    ],
+    "specs": {
+      "vram_gb": null,
+      "ram_gb": 8,
+      "cpu_cores": null,
+      "storage_gb": 5
+    }
+  },
+  {
+    "name": "파이참",
+    "aliases": [
+      "PyCharm"
+    ],
+    "specs": {
+      "vram_gb": null,
+      "ram_gb": 8,
+      "cpu_cores": 4,
+      "storage_gb": 10
+    }
+  },
+  {
+    "name": "안드로이드 스튜디오",
+    "aliases": [
+      "Android Studio",
+      "안스"
+    ],
+    "specs": {
+      "vram_gb": null,
+      "ram_gb": 16,
+      "cpu_cores": 6,
+      "storage_gb": 30
+    }
+  },
+  {
+    "name": "비주얼 스튜디오",
+    "aliases": [
+      "Visual Studio",
+      "VS",
+      "Visual Studio 2026"
+    ],
+    "specs": {
+      "vram_gb": null,
+      "ram_gb": 16,
+      "cpu_cores": 4,
+      "storage_gb": 50
+    }
+  },
+  {
+    "name": "도커 데스크톱",
+    "aliases": [
+      "Docker Desktop",
+      "도커",
+      "Docker"
+    ],
+    "specs": {
+      "vram_gb": null,
+      "ram_gb": 8,
+      "cpu_cores": null,
+      "storage_gb": null
+    }
+  },
+  {
+    "name": "VM웨어 워크스테이션 프로",
+    "aliases": [
+      "VMware Workstation Pro",
+      "VM웨어",
+      "브이엠웨어",
+      "VMware"
+    ],
+    "specs": {
+      "vram_gb": null,
+      "ram_gb": 4,
+      "cpu_cores": null,
+      "storage_gb": null
+    }
+  },
+  {
+    "name": "올라마 13B 모델",
+    "aliases": [
+      "Ollama 13B model",
+      "올라마",
+      "Ollama",
+      "로컬 LLM 13B",
+      "14B 모델"
+    ],
+    "specs": {
+      "vram_gb": null,
+      "ram_gb": 16,
+      "cpu_cores": null,
+      "storage_gb": null
+    }
+  }
+]
