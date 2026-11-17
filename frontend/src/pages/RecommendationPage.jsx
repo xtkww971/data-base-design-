@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
+import { queryNl2Sql } from '../api/nl2sqlApi.js';
+import { CONFIG_KEYS, formatPrice, mapEstimate } from '../utils/estimateMapper.js';
 import './RecommendationPage.css';
 
 const SIDEBAR_BREAKPOINT = 900; // 이 폭 이하면 자동으로 닫힘
+const SHOW_DEBUG_SQL = import.meta.env.DEV; // 생성된 SQL 은 개발 서버에서만 노출
 
 const defaultPrompt =
   '300만원 안팎의 예산으로 컴퓨터 견적 맞춰줘.';
@@ -18,7 +21,7 @@ const CONFIG_LIMITS = {
 
 const formatConfigurationValue = (key, value) => {
   if (value === undefined || value === null || value === '') {
-    return 'Null';
+    return '추천 없음';
   }
 
   if (Array.isArray(value)) {
@@ -41,10 +44,15 @@ export default function RecommendationPage() {
   const [selectedPromptIndex, setSelectedPromptIndex] = useState(null);
   const [promptText, setPromptText] = useState(defaultPrompt);
   const [isGenerating, setIsGenerating] = useState(false);
+  const abortControllerRef = useRef(null);
 
   const selectedPrompt = selectedPromptIndex === null ? null : recentPrompts[selectedPromptIndex];
 
-  const handleSubmitPrompt = () => {
+  const updateEntry = (id, patch) => {
+    setRecentPrompts((prev) => prev.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)));
+  };
+
+  const handleSubmitPrompt = async () => {
     const trimmedPrompt = promptText.trim();
 
     if (!trimmedPrompt || isGenerating) {
@@ -59,28 +67,50 @@ export default function RecommendationPage() {
     ).padStart(2, '0')}`;
 
     const newEntry = {
+      id: `${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
       date: formattedDate,
       prompt: trimmedPrompt,
-      configuration: {
-        cpu: undefined,
-        motherboard: undefined,
-        ram: undefined,
-        gpu: undefined,
-        power: undefined,
-        ssd: undefined,
-        hdd: undefined,
-        monitor: undefined,
-      },
+      status: 'loading',
+      errorMessage: null,
+      totalPrice: null,
+      configuration: Object.fromEntries(CONFIG_KEYS.map((key) => [key, undefined])),
     };
 
     setRecentPrompts((prev) => [newEntry, ...prev]);
     setSelectedPromptIndex(0);
     setPromptText('');
 
-    setTimeout(() => {
-      setIsGenerating(false);
-    }, 1800);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      const response = await queryNl2Sql(trimmedPrompt, controller.signal);
+      const { configuration, totalPrice, isEmpty } = mapEstimate(response);
+      updateEntry(newEntry.id, {
+        status: isEmpty ? 'empty' : 'done',
+        configuration,
+        totalPrice,
+        sql: response?.sql ?? null,
+        rowCount: response?.rowCount ?? 0,
+      });
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        return;
+      }
+      updateEntry(newEntry.id, {
+        status: 'error',
+        errorMessage: error?.message ?? '견적 생성에 실패했습니다.',
+      });
+    } finally {
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+        setIsGenerating(false);
+      }
+    }
   };
+
+  // 페이지를 떠나면 진행 중인 요청을 취소한다.
+  useEffect(() => () => abortControllerRef.current?.abort(), []);
 
   const handleDeletePrompt = (indexToDelete) => {
     setRecentPrompts((prev) => {
@@ -135,7 +165,7 @@ export default function RecommendationPage() {
             <div className="recommendation-page__sidebar-body">
               <ul className="recommendation-page__recent-list">
                 {recentPrompts.map((item, index) => (
-                  <li key={`${item.date}-${item.prompt}-${index}`}>
+                  <li key={item.id}>
                     <div
                       className={`recommendation-page__recent-item-wrapper ${
                         selectedPromptIndex === index ? 'is-selected' : ''
@@ -215,20 +245,50 @@ export default function RecommendationPage() {
                     <p>{selectedPrompt.prompt}</p>
                   </div>
 
-                  <div className="recommendation-page__config-grid">
-                    {Object.entries(selectedPrompt.configuration).map(([key, value]) => (
-                      <div key={key} className="recommendation-page__config-item">
-                        <span>{key}</span>
-                        <strong
-                          className={
-                            key === 'ram' || key === 'monitor' ? 'is-count-chip' : ''
-                          }
-                        >
-                          {formatConfigurationValue(key, value)}
-                        </strong>
+                  {selectedPrompt.status === 'error' ? (
+                    <div className="recommendation-page__empty-config recommendation-page__selected-panel">
+                      {selectedPrompt.errorMessage}
+                    </div>
+                  ) : selectedPrompt.status === 'empty' ? (
+                    <div className="recommendation-page__empty-config recommendation-page__selected-panel">
+                      조건에 맞는 부품을 찾지 못했어요. 예산이나 조건을 바꿔서 다시 질문해 주세요.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="recommendation-page__config-grid">
+                        {Object.entries(selectedPrompt.configuration).map(([key, value]) => (
+                          <div key={key} className="recommendation-page__config-item">
+                            <span>{key}</span>
+                            <strong
+                              className={
+                                Array.isArray(value) && (key === 'ram' || key === 'monitor')
+                                  ? 'is-count-chip'
+                                  : ''
+                              }
+                            >
+                              {formatConfigurationValue(key, value)}
+                            </strong>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+
+                      {selectedPrompt.totalPrice ? (
+                        <div className="recommendation-page__total-price">
+                          총 예상 금액 <strong>{formatPrice(selectedPrompt.totalPrice)}</strong>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+
+                  {/* 디버깅용: 개발 서버(npm run dev)에서만 생성된 SQL 을 보여준다. */}
+                  {SHOW_DEBUG_SQL && selectedPrompt.sql ? (
+                    <details className="recommendation-page__debug-sql" open>
+                      <summary>
+                        생성된 SQL <span>{selectedPrompt.rowCount}행</span>
+                      </summary>
+                      <pre>{selectedPrompt.sql}</pre>
+                    </details>
+                  ) : null}
                 </div>
               ) : null}
             </div>
