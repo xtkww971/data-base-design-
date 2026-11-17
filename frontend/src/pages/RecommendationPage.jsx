@@ -6,6 +6,7 @@ import { CONFIG_KEYS, formatPrice, mapEstimate } from '../utils/estimateMapper.j
 import './RecommendationPage.css';
 
 const SIDEBAR_BREAKPOINT = 900; // 이 폭 이하면 자동으로 닫힘
+const SHOW_DEBUG_SQL = import.meta.env.DEV; // 생성된 SQL 은 개발 서버에서만 노출
 
 const defaultPrompt =
   '300만원 안팎의 예산으로 컴퓨터 견적 맞춰줘.';
@@ -89,6 +90,8 @@ export default function RecommendationPage() {
         status: isEmpty ? 'empty' : 'done',
         configuration,
         totalPrice,
+        sql: response?.sql ?? null,
+        rowCount: response?.rowCount ?? 0,
       });
     } catch (error) {
       if (error?.name === 'AbortError') {
@@ -276,6 +279,16 @@ export default function RecommendationPage() {
                       ) : null}
                     </>
                   )}
+
+                  {/* 디버깅용: 개발 서버(npm run dev)에서만 생성된 SQL 을 보여준다. */}
+                  {SHOW_DEBUG_SQL && selectedPrompt.sql ? (
+                    <details className="recommendation-page__debug-sql" open>
+                      <summary>
+                        생성된 SQL <span>{selectedPrompt.rowCount}행</span>
+                      </summary>
+                      <pre>{selectedPrompt.sql}</pre>
+                    </details>
+                  ) : null}
                 </div>
               ) : null}
             </div>

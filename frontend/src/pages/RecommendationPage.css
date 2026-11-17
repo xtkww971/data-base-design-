@@ -510,3 +510,47 @@
   color: #f8fafc;
   font-size: 1.1rem;
 }
+
+.recommendation-page__debug-sql {
+  margin-top: 16px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px dashed rgba(148, 163, 184, 0.24);
+  overflow: hidden;
+}
+
+.recommendation-page__debug-sql summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  user-select: none;
+}
+
+.recommendation-page__debug-sql summary span {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+.recommendation-page__debug-sql pre {
+  margin: 0;
+  padding: 12px 14px 14px;
+  max-height: 320px;
+  overflow: auto;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
