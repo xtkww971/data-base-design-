@@ -56,3 +56,9 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+
+// bootJar 와 함께 생성되는 plain jar 를 끈다.
+// 끄지 않으면 build/libs 에 jar 가 2개 생겨 Dockerfile 의 COPY *.jar 가 실패한다.
+tasks.named<Jar>("jar") {
+	enabled = false
+}
