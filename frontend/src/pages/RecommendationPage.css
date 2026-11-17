@@ -496,3 +496,17 @@
     grid-template-columns: 1fr;
   }
 }
+.recommendation-page__total-price {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.86rem;
+}
+
+.recommendation-page__total-price strong {
+  color: #f8fafc;
+  font-size: 1.1rem;
+}
