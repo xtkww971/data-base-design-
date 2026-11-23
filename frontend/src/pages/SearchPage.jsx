@@ -34,6 +34,8 @@ const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
 // 목록 칸이 멈춰 서는 화면 위치(헤더 100px + 12px). SearchPage.css 의 calc(100vh - 136px) 와 맞춘다.
 const LIST_PIN_TOP = 112;
+// 목록 휠 스크롤의 감속 시간 상수(ms). 클수록 더 미끄러지듯 느리게 멈춘다. 약 3배 시간이면 거의 도착한다.
+const SMOOTH_SCROLL_MS = 60;
 
 const formatPrice = (price) => `₩ ${new Intl.NumberFormat('ko-KR').format(price)}`;
 
@@ -181,33 +183,115 @@ export default function SearchPage() {
 
   const layoutRef = useRef(null);
   const resultsRef = useRef(null);
+  // 진행 중인 부드러운 스크롤을 멈추는 함수. 카테고리를 바꿔 목록을 맨 위로 돌릴 때 쓴다.
+  const stopListScrollRef = useRef(() => {});
 
-  // 목록 위에서 휠을 내리면, 목록 칸이 헤더 아래(LIST_PIN_TOP)에 닿을 때까지는 페이지를 먼저 내리고
-  // 그다음부터 목록 안을 스크롤한다. 그냥 두면 페이지 맨 위에서 목록 안만 움직여 칸 아래쪽이 화면 밖에 남는다.
-  // 위로 올릴 때와 목록 끝에서 더 내릴 때는 브라우저 기본 동작(페이지로 이어서 스크롤)을 그대로 쓴다.
+  // 목록 위에서 굴린 휠은 직접 나눠서 처리한다.
+  // 내릴 때: 목록 칸이 헤더 아래(LIST_PIN_TOP)에 닿을 때까지 페이지 -> 목록 안 -> 목록 끝이면 다시 페이지(푸터 쪽)
+  // 올릴 때: 같은 순서를 거꾸로.
+  // 일부만 브라우저에 맡기면 안 된다. Chrome 은 이어지는 휠 입력을 한 묶음으로 처리하는데, 묶음의 첫 입력을
+  // 막으면 그 묶음 동안은 직접 스크롤하지 않아서, 칸이 멈춘 뒤 목록이 안 내려가는 문제가 생긴다.
+  // 직접 처리하는 대신 브라우저처럼 부드럽게 움직이도록, 휠마다 목표 위치를 쌓고 매 프레임 목표로 감속하며 다가간다.
   useEffect(() => {
     const results = resultsRef.current;
     const layout = layoutRef.current;
     if (!results || !layout) return undefined;
 
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // pos: 지금 그린 위치, target: 가야 할 위치. 소수점까지 따로 들고 있어야 느린 구간에서 멈추지 않는다.
+    const anim = { frame: 0, lastTime: 0, pagePos: 0, listPos: 0, pageTarget: 0, listTarget: 0 };
+
+    const apply = () => {
+      window.scrollTo({ top: anim.pagePos, behavior: 'instant' });
+      results.scrollTop = anim.listPos;
+    };
+
+    const step = (time) => {
+      // 그사이 사용자가 다른 방법(목록 밖 휠, 스크롤바, 키보드)으로 움직였으면 그쪽을 따르고 멈춘다.
+      if (anim.lastTime && (Math.abs(window.scrollY - anim.pagePos) > 2 || Math.abs(results.scrollTop - anim.listPos) > 2)) {
+        anim.frame = 0;
+        return;
+      }
+      const elapsed = anim.lastTime ? time - anim.lastTime : 16;
+      anim.lastTime = time;
+      const ratio = 1 - Math.exp(-elapsed / SMOOTH_SCROLL_MS);
+      anim.pagePos += (anim.pageTarget - anim.pagePos) * ratio;
+      anim.listPos += (anim.listTarget - anim.listPos) * ratio;
+
+      const done =
+        Math.abs(anim.pageTarget - anim.pagePos) < 0.5 && Math.abs(anim.listTarget - anim.listPos) < 0.5;
+      if (done) {
+        anim.pagePos = anim.pageTarget;
+        anim.listPos = anim.listTarget;
+      }
+      apply();
+      anim.frame = done ? 0 : requestAnimationFrame(step);
+    };
+
+    const stop = () => {
+      cancelAnimationFrame(anim.frame);
+      anim.frame = 0;
+    };
+    stopListScrollRef.current = stop;
+
     const handleWheel = (event) => {
-      // 목록이 칸 안에서 스크롤되지 않는 화면(좁은 화면)이면 손대지 않는다.
-      if (event.deltaY <= 0 || results.scrollHeight <= results.clientHeight) return;
-      // 소수점 위치 오차는 무시하고, 페이지가 더 내려갈 수 없으면(페이지가 짧은 경우) 바로 목록을 스크롤한다.
-      const distance = layout.getBoundingClientRect().top - LIST_PIN_TOP;
-      const pageRemaining = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
-      if (distance <= 1 || pageRemaining <= 1) return;
+      // 목록이 칸 안에서 스크롤되지 않는 화면(좁은 화면, 결과가 적을 때)과 확대·축소(ctrl+휠)는 브라우저에 맡긴다.
+      if (event.ctrlKey || event.deltaY === 0 || results.scrollHeight <= results.clientHeight) return;
       event.preventDefault();
-      const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY; // 줄 단위(Firefox)면 px 로
-      window.scrollBy(0, Math.min(delta, distance));
+
+      // 움직이는 중이 아니면 지금 위치에서 시작한다. 스크롤바·키보드로 옮겼을 수 있다.
+      if (!anim.frame) {
+        anim.pagePos = anim.pageTarget = window.scrollY;
+        anim.listPos = anim.listTarget = results.scrollTop;
+        anim.lastTime = 0;
+      }
+
+      // 줄·페이지 단위(Firefox 등)면 px 로 바꾼다.
+      let remaining =
+        event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * results.clientHeight : event.deltaY;
+      // 목록 칸이 헤더 아래에 멈추는 페이지 스크롤 위치와 각 스크롤의 끝
+      const pinY = window.scrollY + layout.getBoundingClientRect().top - LIST_PIN_TOP;
+      const pageMax = document.documentElement.scrollHeight - window.innerHeight;
+      const listMax = results.scrollHeight - results.clientHeight;
+
+      // remaining 을 from 에서 limit 까지만 쓰고, 쓴 만큼을 돌려준다.
+      const take = (from, limit) => {
+        const room = limit - from;
+        const amount = remaining > 0 ? Math.min(remaining, Math.max(room, 0)) : Math.max(remaining, Math.min(room, 0));
+        remaining -= amount;
+        return amount;
+      };
+
+      // 목표 위치 기준으로 나눠야 애니메이션 도중에 휠을 더 굴려도 단계가 맞다. 1px 이하 차이는 칸이 멈춘 것으로 본다.
+      if (remaining > 0) {
+        if (pinY - anim.pageTarget > 1) anim.pageTarget += take(anim.pageTarget, Math.min(pinY, pageMax));
+        anim.listTarget += take(anim.listTarget, listMax);
+        anim.pageTarget += take(anim.pageTarget, pageMax);
+      } else {
+        if (anim.pageTarget - pinY > 1) anim.pageTarget += take(anim.pageTarget, Math.max(pinY, 0));
+        anim.listTarget += take(anim.listTarget, 0);
+        anim.pageTarget += take(anim.pageTarget, 0);
+      }
+
+      if (reduceMotion.matches) {
+        anim.pagePos = anim.pageTarget;
+        anim.listPos = anim.listTarget;
+        apply();
+        return;
+      }
+      if (!anim.frame) anim.frame = requestAnimationFrame(step);
     };
 
     results.addEventListener('wheel', handleWheel, { passive: false });
-    return () => results.removeEventListener('wheel', handleWheel);
+    return () => {
+      stop();
+      results.removeEventListener('wheel', handleWheel);
+    };
   }, []);
 
   // 카테고리·검색어가 바뀌면 목록 칸을 맨 위로 돌린다.
   useEffect(() => {
+    stopListScrollRef.current();
     resultsRef.current?.scrollTo({ top: 0 });
   }, [queryKey]);
 
