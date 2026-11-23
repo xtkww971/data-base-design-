@@ -351,6 +351,15 @@
   box-shadow: 0 12px 22px rgba(37, 99, 235, 0.2);
 }
 
+/* 이미 장바구니에 담은 부품 */
+.search-page__primary-button:disabled {
+  background: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #86efac;
+  box-shadow: none;
+  cursor: default;
+}
+
 .search-page__secondary-button {
   background: rgba(148, 163, 184, 0.08);
   border: 1px solid rgba(148, 163, 184, 0.2);

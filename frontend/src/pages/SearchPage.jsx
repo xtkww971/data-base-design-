@@ -5,6 +5,7 @@ import './SearchPage.css';
 import { PRODUCT_CATEGORIES } from '../types/productDetail.ts';
 import { searchProducts } from '../api/productApi.js';
 import { getSpecEntries } from '../utils/productSpecs.js';
+import { addToCart, useCartItems } from '../cart/cartStore.js';
 import dummyCpuImage from '../assets/dummy_cpu.webp';
 import dummyMainboardImage from '../assets/dummy_motherbored.webp';
 import dummyRamImage from '../assets/dummy_ram.jpg';
@@ -111,7 +112,19 @@ const getProductSummary = (product) => {
   return '';
 };
 
+// cartStore 항목 형식: { id(module_id), category, name, brand, summary, price, imageUrl }
+const toCartItem = (product) => ({
+  id: product.id,
+  category: product.category,
+  name: product.name,
+  brand: product.brand ?? '',
+  summary: getProductSummary(product),
+  price: product.price,
+  imageUrl: product.imageUrl ?? null,
+});
+
 export default function SearchPage() {
+  const cartIds = new Set(useCartItems().map((item) => item.id));
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -316,8 +329,14 @@ export default function SearchPage() {
                 </div>
 
                 <div className="search-page__detail-actions">
-                  <button type="button" className="search-page__primary-button">
-                    견적에 추가
+                  {/* 추천 페이지의 담기 버튼과 같이, 이미 담은 부품은 다시 담지 않고 표시만 바꾼다. 수량은 장바구니에서 조절. */}
+                  <button
+                    type="button"
+                    className="search-page__primary-button"
+                    onClick={() => addToCart(toCartItem(selectedProduct))}
+                    disabled={cartIds.has(selectedProduct.id)}
+                  >
+                    {cartIds.has(selectedProduct.id) ? '장바구니에 담김 ✓' : '장바구니에 담기'}
                   </button>
                   <button type="button" className="search-page__secondary-button">
                     비교하기
