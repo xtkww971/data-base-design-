@@ -925,7 +925,10 @@ export default function RecommendationPage() {
 
                   {selectedPrompt.error ? (
                     <div className="recommendation-page__result-error" role="alert">
-                      {selectedPrompt.error}
+                      <span>{selectedPrompt.error}</span>
+                      {selectedPrompt.errorCode ? (
+                        <code className="recommendation-page__error-code">{selectedPrompt.errorCode}</code>
+                      ) : null}
                     </div>
                   ) : null}
 
