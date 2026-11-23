@@ -156,7 +156,9 @@ export default function SearchPage() {
 
   // 장바구니에 보내기 전에 모아 두는 선택 목록. 항목: { item(cartStore 형식), quantity }
   // 카테고리나 검색어를 바꿔도 유지되어 여러 부품을 모은 뒤 한 번에 담을 수 있다.
-  // 선택 목록은 왼쪽 서랍에 두고, 열면 본문을 오른쪽으로 민다(넓은 화면). 추가해도 자동으로 열지 않는다.
+  // 선택 목록은 왼쪽 서랍에 둔다. 펼쳤을 때 서랍이 부품 목록을 가리는 화면이면 본문을 오른쪽으로 밀고,
+  // 왼쪽 여백이 충분해 가리지 않으면 그대로 둔다. 밀 공간이 없는 좁은 화면은 본문 위에 겹친다(SearchPage.css).
+  // 추가해도 자동으로 열지 않는다.
   const [selection, setSelection] = useState([]);
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
   // 마지막으로 장바구니에 보낸 부품 종류 수. 서랍이 비었을 때 안내 문구에 쓴다.
@@ -594,6 +596,11 @@ export default function SearchPage() {
       </main>
 
       <Footer />
+
+      {/* 화면이 좁아 서랍이 본문 위에 겹칠 때(980px 이하)만 보인다. 그보다 넓으면 CSS 에서 숨긴다. */}
+      {isSelectionOpen && (
+        <div className="search-page__selection-backdrop" onClick={() => setIsSelectionOpen(false)} aria-hidden="true" />
+      )}
 
       <aside
         id="selection-drawer"

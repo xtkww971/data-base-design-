@@ -9,9 +9,14 @@
   transition: padding-left 0.25s ease;
 }
 
-/* 선택 목록을 열면 서랍 폭만큼 본문을 오른쪽으로 밀어 부품 목록을 가리지 않는다.
-   좁은 화면(980px 이하)은 밀어낼 공간이 없어 서랍이 본문 위에 겹친다. */
-@media (min-width: 981px) {
+/* 선택 목록을 펼쳤을 때 서랍이 부품 목록을 가리면 본문을 밀고, 가리지 않으면 그대로 둔다.
+   본문은 최대 1280px 로 가운데 정렬이라, 왼쪽 여백 = (화면 폭 - 스크롤바 - 1280px) / 2.
+   이 여백이 서랍 폭(380px) + 간격 16px 이상이 되는 2100px 부터는 서랍이 여백에 들어가 목록을 가리지 않는다.
+   - 2100px 이상: 본문 그대로, 서랍만 펼친다.
+   - 981 ~ 2099px: 서랍이 목록을 가리므로 서랍 폭만큼 본문을 오른쪽으로 민다.
+   - 980px 이하: 밀 공간이 없어 서랍을 본문 위에 겹치고 뒤를 어둡게 깐다(배경을 누르면 닫힘).
+   서랍 폭(--selection-width)이나 본문 최대 폭을 바꾸면 이 기준도 같이 바꾼다. */
+@media (min-width: 981px) and (max-width: 2099px) {
   .search-page.is-selection-open {
     padding-left: var(--selection-width);
   }
@@ -26,6 +31,27 @@
   .search-page.is-selection-open .search-page__card-image-wrap {
     width: 100%;
     height: 180px;
+  }
+}
+
+.search-page__selection-backdrop {
+  position: fixed;
+  inset: 100px 0 0; /* 헤더 아래부터 */
+  z-index: 44; /* 서랍(45) 바로 아래 */
+  background: rgba(2, 6, 23, 0.55);
+  animation: search-page-backdrop-in 0.25s ease;
+}
+
+@keyframes search-page-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 배경은 서랍이 본문 위에 겹치는 좁은 화면에서만 */
+@media (min-width: 981px) {
+  .search-page__selection-backdrop {
+    display: none;
   }
 }
 
@@ -528,7 +554,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .search-page__selection-badge {
+  .search-page__selection-badge,
+  .search-page__selection-backdrop {
     animation: none;
   }
 
@@ -545,7 +572,7 @@
   left: 0;
   bottom: 0;
   z-index: 45;
-  width: min(var(--selection-width), 100vw);
+  width: min(var(--selection-width), calc(100vw - 48px)); /* 좁은 화면에서도 오른쪽 배경을 눌러 닫을 수 있게 */
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
