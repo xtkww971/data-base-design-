@@ -1,10 +1,32 @@
 .search-page {
+  --selection-width: 380px; /* 선택 목록 서랍 폭 */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #0a1020 0%, #0f172a 100%);
   color: #e2e8f0;
   padding-top: 96px;
+  transition: padding-left 0.25s ease;
+}
+
+/* 선택 목록을 열면 서랍 폭만큼 본문을 오른쪽으로 밀어 부품 목록을 가리지 않는다.
+   좁은 화면(980px 이하)은 밀어낼 공간이 없어 서랍이 본문 위에 겹친다. */
+@media (min-width: 981px) {
+  .search-page.is-selection-open {
+    padding-left: var(--selection-width);
+  }
+}
+
+/* 밀린 만큼 목록 칸이 좁아지므로, 이 폭에서는 카드를 이미지 위·내용 아래로 쌓는다. 상세 패널은 옆에 그대로 둔다. */
+@media (min-width: 981px) and (max-width: 1320px) {
+  .search-page.is-selection-open .search-page__card {
+    grid-template-columns: 1fr;
+  }
+
+  .search-page.is-selection-open .search-page__card-image-wrap {
+    width: 100%;
+    height: 180px;
+  }
 }
 
 .search-page__content {
@@ -126,10 +148,28 @@
   transition-delay: 0.15s;
 }
 
+/* 목록은 화면 높이만큼의 칸 안에서 따로 스크롤하고, 옆의 상세 패널은 움직이지 않는다.
+   112px = 헤더(100px) + 12px, 24px = 아래 여백. SearchPage.jsx 의 LIST_PIN_TOP 과 맞춘다. */
 .search-page__results {
   display: grid;
   gap: 16px;
   align-content: start; /* 추가: 카드 행이 늘어나지 않게 */
+  height: calc(100vh - 136px);
+  min-height: 480px;
+  overflow-y: auto;
+  /* 카드의 호버 그림자·이동이 칸 경계에서 잘리지 않게 여유를 둔다. 오른쪽은 스크롤바 자리 */
+  padding: 4px 10px 4px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+.search-page__results::-webkit-scrollbar {
+  width: 8px;
+}
+
+.search-page__results::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.35);
 }
 
 
@@ -246,10 +286,9 @@
 }
 
 .search-page__detail {
-  position: sticky;
-  top: 112px;
-  /* 화면 높이를 넘지 않게 해서 목록을 스크롤해도 패널 전체가 항상 보이게 한다. */
+  /* 목록 칸과 같은 높이까지만. 목록은 자기 칸 안에서 스크롤하므로 패널은 제자리에 있다. */
   max-height: calc(100vh - 136px);
+  min-height: 0;
   overflow-y: auto;
   box-sizing: border-box;
   display: flex;
@@ -351,13 +390,325 @@
   box-shadow: 0 12px 22px rgba(37, 99, 235, 0.2);
 }
 
-/* 이미 장바구니에 담은 부품 */
-.search-page__primary-button:disabled {
+/* 선택 목록에 추가한 부품의 수량 조절. 추가 버튼 자리를 그대로 쓴다. */
+.search-page__selected-quantity {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 4px 4px 14px;
+  border-radius: 12px;
   background: rgba(34, 197, 94, 0.14);
   border: 1px solid rgba(74, 222, 128, 0.3);
   color: #86efac;
-  box-shadow: none;
-  cursor: default;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.search-page__stepper {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.9);
+  overflow: hidden;
+}
+
+.search-page__stepper button {
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.search-page__stepper button:hover:not(:disabled) {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.search-page__stepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.search-page__stepper span {
+  min-width: 32px;
+  text-align: center;
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+}
+
+.search-page__in-cart-note {
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8rem;
+}
+
+/* 수량 조절 칸 왼쪽의 "선택 목록 보기". 초록 칸 안의 글자 버튼 */
+.search-page__selected-link {
+  padding: 6px 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.search-page__selected-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* 선택 목록 열기·닫기 버튼. 헤더 제목 오른쪽에 두고, 카테고리 필터와 같은 둥근 버튼 모양을 쓴다. */
+.search-page__selection-toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px; /* 터치 대상 최소 크기 */
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.7);
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.search-page__selection-toggle:hover {
+  border-color: rgba(125, 211, 252, 0.42);
+  color: #f0f9ff;
+}
+
+.search-page__selection-toggle:focus-visible,
+.search-page__selected-link:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+/* 서랍이 열려 있을 때는 선택된 필터와 같은 모양 */
+.search-page__selection-toggle.is-active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(37, 99, 235, 0.2));
+  border-color: rgba(125, 211, 252, 0.42);
+  color: #f0f9ff;
+}
+
+.search-page__selection-badge {
+  min-width: 22px;
+  padding: 1px 7px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+  color: white;
+  font-size: 0.75rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  animation: search-page-badge-pop 0.25s ease;
+}
+
+@keyframes search-page-badge-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-page__selection-badge {
+    animation: none;
+  }
+
+  .search-page,
+  .search-page__selection-drawer,
+  .search-page__selection-drawer.is-open {
+    transition: none;
+  }
+}
+
+.search-page__selection-drawer {
+  position: fixed;
+  top: 100px;
+  left: 0;
+  bottom: 0;
+  z-index: 45;
+  width: min(var(--selection-width), 100vw);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  background: #080b14;
+  border-right: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 20px 0 40px rgba(2, 6, 23, 0.35);
+  transform: translateX(-100%);
+  visibility: hidden; /* 접힌 동안 Tab 으로 안쪽 버튼에 가지 않게 */
+  transition: transform 0.25s ease, visibility 0s linear 0.25s;
+}
+
+.search-page__selection-drawer.is-open {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform 0.25s ease;
+}
+
+.search-page__selection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.search-page__selection-header h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  font-size: 1.05rem;
+  color: #f8fafc;
+}
+
+.search-page__selection-header h2 span {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.search-page__selection-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: transparent;
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.search-page__selection-close:hover {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.search-page__selection-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.search-page__selection-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.search-page__selection-item-top,
+.search-page__selection-item-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.search-page__selection-name {
+  color: #f8fafc;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.search-page__selection-price {
+  color: #cbd5e1;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.search-page__selection-remove {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+}
+
+.search-page__selection-remove:hover {
+  color: #fca5a5;
+}
+
+.search-page__selection-footer {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.search-page__selection-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  color: #94a3b8;
+  font-size: 0.88rem;
+}
+
+.search-page__selection-total strong {
+  color: #f8fafc;
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.search-page__selection-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.search-page__selection-actions button {
+  white-space: nowrap;
+}
+
+.search-page__selection-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.88rem;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.search-page__selection-empty p {
+  margin: 0;
+}
+
+.search-page__selection-sent {
+  color: #86efac;
+  font-weight: 700;
+}
+
+.search-page__selection-link {
+  color: #93c5fd;
+  font-weight: 700;
+  text-decoration: none;
 }
 
 .search-page__secondary-button {
@@ -401,6 +752,10 @@
     display: block;
   }
 
+  .search-page__selection-toggle {
+    margin-top: 18px;
+  }
+
   .search-page__search {
     margin-top: 18px;
     min-width: 100%;
@@ -410,8 +765,15 @@
     grid-template-columns: 1fr;
   }
 
+  /* 한 줄로 쌓이는 화면에서는 목록도 페이지와 함께 스크롤한다. */
+  .search-page__results {
+    height: auto;
+    min-height: 0;
+    overflow-y: visible;
+    padding: 0;
+  }
+
   .search-page__detail {
-    position: static;
     max-height: none;
     overflow-y: visible;
   }

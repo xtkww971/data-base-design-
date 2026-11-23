@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import './SearchPage.css';
 import { PRODUCT_CATEGORIES } from '../types/productDetail.ts';
 import { searchProducts } from '../api/productApi.js';
 import { getSpecEntries } from '../utils/productSpecs.js';
-import { addToCart, useCartItems } from '../cart/cartStore.js';
+import { CART_MAX_QUANTITY, addToCart, useCartItems } from '../cart/cartStore.js';
 import dummyCpuImage from '../assets/dummy_cpu.webp';
 import dummyMainboardImage from '../assets/dummy_motherbored.webp';
 import dummyRamImage from '../assets/dummy_ram.jpg';
@@ -31,6 +32,8 @@ const getProductImage = (product) => product.imageUrl || DUMMY_IMAGES[product.ca
 
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
+// 목록 칸이 멈춰 서는 화면 위치(헤더 100px + 12px). SearchPage.css 의 calc(100vh - 136px) 와 맞춘다.
+const LIST_PIN_TOP = 112;
 
 const formatPrice = (price) => `₩ ${new Intl.NumberFormat('ko-KR').format(price)}`;
 
@@ -123,8 +126,40 @@ const toCartItem = (product) => ({
   imageUrl: product.imageUrl ?? null,
 });
 
+function QuantityStepper({ quantity, onChange, name }) {
+  return (
+    <div className="search-page__stepper">
+      <button
+        type="button"
+        onClick={() => onChange(-1)}
+        aria-label={quantity <= 1 ? `${name} 선택 목록에서 빼기` : `${name} 수량 줄이기`}
+      >
+        −
+      </button>
+      <span aria-label="수량">{quantity}</span>
+      <button
+        type="button"
+        onClick={() => onChange(1)}
+        disabled={quantity >= CART_MAX_QUANTITY}
+        aria-label={`${name} 수량 늘리기`}
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
 export default function SearchPage() {
-  const cartIds = new Set(useCartItems().map((item) => item.id));
+  const cartQuantities = new Map(useCartItems().map((item) => [item.id, item.quantity]));
+
+  // 장바구니에 보내기 전에 모아 두는 선택 목록. 항목: { item(cartStore 형식), quantity }
+  // 카테고리나 검색어를 바꿔도 유지되어 여러 부품을 모은 뒤 한 번에 담을 수 있다.
+  // 선택 목록은 왼쪽 서랍에 두고, 열면 본문을 오른쪽으로 민다(넓은 화면). 추가해도 자동으로 열지 않는다.
+  const [selection, setSelection] = useState([]);
+  const [isSelectionOpen, setIsSelectionOpen] = useState(false);
+  // 마지막으로 장바구니에 보낸 부품 종류 수. 서랍이 비었을 때 안내 문구에 쓴다.
+  const [sentCount, setSentCount] = useState(0);
+
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -143,6 +178,38 @@ export default function SearchPage() {
   const totalElements = searchResult?.totalElements ?? 0;
   const errorMessage = searchResult?.errorMessage ?? null;
   const isLoading = currentResult === null || isLoadingMore;
+
+  const layoutRef = useRef(null);
+  const resultsRef = useRef(null);
+
+  // 목록 위에서 휠을 내리면, 목록 칸이 헤더 아래(LIST_PIN_TOP)에 닿을 때까지는 페이지를 먼저 내리고
+  // 그다음부터 목록 안을 스크롤한다. 그냥 두면 페이지 맨 위에서 목록 안만 움직여 칸 아래쪽이 화면 밖에 남는다.
+  // 위로 올릴 때와 목록 끝에서 더 내릴 때는 브라우저 기본 동작(페이지로 이어서 스크롤)을 그대로 쓴다.
+  useEffect(() => {
+    const results = resultsRef.current;
+    const layout = layoutRef.current;
+    if (!results || !layout) return undefined;
+
+    const handleWheel = (event) => {
+      // 목록이 칸 안에서 스크롤되지 않는 화면(좁은 화면)이면 손대지 않는다.
+      if (event.deltaY <= 0 || results.scrollHeight <= results.clientHeight) return;
+      // 소수점 위치 오차는 무시하고, 페이지가 더 내려갈 수 없으면(페이지가 짧은 경우) 바로 목록을 스크롤한다.
+      const distance = layout.getBoundingClientRect().top - LIST_PIN_TOP;
+      const pageRemaining = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+      if (distance <= 1 || pageRemaining <= 1) return;
+      event.preventDefault();
+      const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY; // 줄 단위(Firefox)면 px 로
+      window.scrollBy(0, Math.min(delta, distance));
+    };
+
+    results.addEventListener('wheel', handleWheel, { passive: false });
+    return () => results.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  // 카테고리·검색어가 바뀌면 목록 칸을 맨 위로 돌린다.
+  useEffect(() => {
+    resultsRef.current?.scrollTo({ top: 0 });
+  }, [queryKey]);
 
   // 타이핑할 때마다 요청하지 않도록 입력이 멈춘 뒤에 검색어를 반영한다.
   useEffect(() => {
@@ -204,9 +271,52 @@ export default function SearchPage() {
 
   const selectedProduct =
     products.find((product) => product.id === selectedProductId) || products[0] || null;
+  // 선택 목록·장바구니에 담긴 수량. 없으면 undefined
+  const selectedQuantity = selection.find((entry) => entry.item.id === selectedProduct?.id)?.quantity;
+  const inCartQuantity = selectedProduct ? cartQuantities.get(selectedProduct.id) : undefined;
+
+  const selectionCount = selection.reduce((sum, entry) => sum + entry.quantity, 0);
+  const selectionPrice = selection.reduce((sum, entry) => sum + entry.item.price * entry.quantity, 0);
+
+  const addToSelection = (product) => {
+    setSelection((prev) => [...prev, { item: toCartItem(product), quantity: 1 }]);
+    setSentCount(0);
+  };
+
+  // 1개에서 줄이면 선택 목록에서 뺀다.
+  const changeSelectionQuantity = (id, delta) => {
+    setSelection((prev) =>
+      prev.flatMap((entry) => {
+        if (entry.item.id !== id) return [entry];
+        const quantity = Math.min(CART_MAX_QUANTITY, entry.quantity + delta);
+        return quantity < 1 ? [] : [{ ...entry, quantity }];
+      }),
+    );
+  };
+
+  const removeFromSelection = (id) => {
+    setSelection((prev) => prev.filter((entry) => entry.item.id !== id));
+  };
+
+  // 이미 장바구니에 있는 부품은 addToCart 가 수량을 더한다.
+  const sendSelectionToCart = () => {
+    selection.forEach(({ item, quantity }) => addToCart(item, quantity));
+    setSentCount(selection.length);
+    setSelection([]);
+  };
+
+  // 서랍이 열려 있는 동안 Esc 로 접을 수 있게 한다.
+  useEffect(() => {
+    if (!isSelectionOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setIsSelectionOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSelectionOpen]);
 
   return (
-    <div className="search-page">
+    <div className={`search-page ${isSelectionOpen ? 'is-selection-open' : ''}`}>
       <Header />
 
       <main className="search-page__content">
@@ -216,6 +326,32 @@ export default function SearchPage() {
               <span className="search-page__eyebrow">견적 검색</span>
               <h1>부품별 최저가와 상세 스펙을 한눈에 확인하세요.</h1>
             </div>
+
+            {/* 같은 버튼으로 서랍을 열고 닫는다. 화면에 떠 있지 않아 목록을 가리지 않는다. */}
+            <button
+              type="button"
+              className={`search-page__selection-toggle ${isSelectionOpen ? 'is-active' : ''}`}
+              onClick={() => setIsSelectionOpen((open) => !open)}
+              aria-expanded={isSelectionOpen}
+              aria-controls="selection-drawer"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path
+                  d="M9 6h11M9 12h11M9 18h11M4 6l.01 0M4 12l.01 0M4 18l.01 0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+              선택 목록
+              {selectionCount > 0 && (
+                // 개수가 바뀔 때마다 다시 그려 배지가 살짝 튀도록 한다 (추가 피드백)
+                <span key={selectionCount} className="search-page__selection-badge">
+                  {selectionCount}
+                </span>
+              )}
+            </button>
           </div>
 
           <div className="search-page__filters" aria-label="카테고리 필터">
@@ -242,8 +378,12 @@ export default function SearchPage() {
             />
           </label>
 
-          <div className={`search-page__layout ${isRefreshing ? 'is-refreshing' : ''}`} aria-busy={isRefreshing}>
-            <div className="search-page__results">
+          <div
+            ref={layoutRef}
+            className={`search-page__layout ${isRefreshing ? 'is-refreshing' : ''}`}
+            aria-busy={isRefreshing}
+          >
+            <div className="search-page__results" ref={resultsRef}>
               {errorMessage ? (
                 <div className="search-page__empty-state">
                   제품 정보를 불러오지 못했습니다.
@@ -329,19 +469,40 @@ export default function SearchPage() {
                 </div>
 
                 <div className="search-page__detail-actions">
-                  {/* 추천 페이지의 담기 버튼과 같이, 이미 담은 부품은 다시 담지 않고 표시만 바꾼다. 수량은 장바구니에서 조절. */}
-                  <button
-                    type="button"
-                    className="search-page__primary-button"
-                    onClick={() => addToCart(toCartItem(selectedProduct))}
-                    disabled={cartIds.has(selectedProduct.id)}
-                  >
-                    {cartIds.has(selectedProduct.id) ? '장바구니에 담김 ✓' : '장바구니에 담기'}
-                  </button>
+                  {selectedQuantity === undefined ? (
+                    <button
+                      type="button"
+                      className="search-page__primary-button"
+                      onClick={() => addToSelection(selectedProduct)}
+                    >
+                      선택 목록에 추가
+                    </button>
+                  ) : (
+                    <div className="search-page__selected-quantity">
+                      {/* 상세 패널은 화면에 붙어 따라오므로, 스크롤한 뒤에도 여기서 서랍을 열 수 있다. */}
+                      <button
+                        type="button"
+                        className="search-page__selected-link"
+                        onClick={() => setIsSelectionOpen(true)}
+                        aria-controls="selection-drawer"
+                      >
+                        ✓ 선택 목록 보기
+                      </button>
+                      <QuantityStepper
+                        quantity={selectedQuantity}
+                        onChange={(delta) => changeSelectionQuantity(selectedProduct.id, delta)}
+                        name={selectedProduct.name}
+                      />
+                    </div>
+                  )}
                   <button type="button" className="search-page__secondary-button">
                     비교하기
                   </button>
                 </div>
+
+                {inCartQuantity ? (
+                  <p className="search-page__in-cart-note">장바구니에 이미 {inCartQuantity}개 있어요.</p>
+                ) : null}
               </aside>
             )}
           </div>
@@ -349,6 +510,94 @@ export default function SearchPage() {
       </main>
 
       <Footer />
+
+      <aside
+        id="selection-drawer"
+        className={`search-page__selection-drawer ${isSelectionOpen ? 'is-open' : ''}`}
+        aria-label="선택 목록"
+      >
+        <div className="search-page__selection-header">
+          <h2>
+            선택 목록
+            {selection.length > 0 && (
+              <span>
+                {selection.length}종 · {selectionCount}개
+              </span>
+            )}
+          </h2>
+          <button
+            type="button"
+            className="search-page__selection-close"
+            onClick={() => setIsSelectionOpen(false)}
+            aria-label="선택 목록 접기"
+          >
+            ✕
+          </button>
+        </div>
+
+        {selection.length > 0 ? (
+          <>
+            <ul className="search-page__selection-list">
+              {selection.map(({ item, quantity }) => (
+                <li key={item.id} className="search-page__selection-item">
+                  <div className="search-page__selection-item-top">
+                    <span className="search-page__category-tag">{item.category}</span>
+                    <button
+                      type="button"
+                      className="search-page__selection-remove"
+                      onClick={() => removeFromSelection(item.id)}
+                      aria-label={`${item.name} 선택 목록에서 빼기`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <span className="search-page__selection-name">{item.name}</span>
+                  <div className="search-page__selection-item-bottom">
+                    <span className="search-page__selection-price">{formatPrice(item.price * quantity)}</span>
+                    <QuantityStepper
+                      quantity={quantity}
+                      onChange={(delta) => changeSelectionQuantity(item.id, delta)}
+                      name={item.name}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="search-page__selection-footer">
+              <div className="search-page__selection-total">
+                <span>합계</span>
+                <strong>{formatPrice(selectionPrice)}</strong>
+              </div>
+              <div className="search-page__selection-actions">
+                <button type="button" className="search-page__secondary-button" onClick={() => setSelection([])}>
+                  비우기
+                </button>
+                <button type="button" className="search-page__primary-button" onClick={sendSelectionToCart}>
+                  장바구니에 모두 담기
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="search-page__selection-empty" aria-live="polite">
+            {sentCount > 0 ? (
+              <>
+                <p className="search-page__selection-sent">부품 {sentCount}종을 장바구니에 담았어요.</p>
+                <Link to="/cart" className="search-page__selection-link">
+                  장바구니 보기 →
+                </Link>
+              </>
+            ) : (
+              <p>
+                아직 고른 부품이 없어요.
+                <br />
+                부품 상세에서 "선택 목록에 추가"를 눌러 모아 보세요.
+              </p>
+            )}
+          </div>
+        )}
+      </aside>
     </div>
   );
 }
