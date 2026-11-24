@@ -60,11 +60,15 @@ services:
       DB_USER: ${MYSQL_USER:-app}
       DB_PASSWORD: ${MYSQL_PASSWORD:-app}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
+      LANGSMITH_TRACING: ${LANGSMITH_TRACING:-false}
+      LANGSMITH_ENDPOINT: ${LANGSMITH_ENDPOINT:-https://api.smith.langchain.com}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-default}
       TZ: Asia/Seoul
     expose:
       - "8000"
     volumes:
-      - ./vectordb:/app/vectordb
+      - ./nl2sql/vectordb:/app/vectordb
       - hf-cache:/root/.cache/huggingface
 
   frontend:
