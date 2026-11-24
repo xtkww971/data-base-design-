@@ -3,7 +3,7 @@ import { queryNl2Sql } from '../api/nl2sqlApi.js';
 
 // 추천 페이지의 질문 내역. 페이지를 나갔다 와도 남도록 컴포넌트 밖(localStorage)에 둔다.
 // 분석 중에 다른 페이지로 가도 응답은 이 저장소에 들어온다.
-// 항목: { id, date, prompt, conditions, status: 'loading' | 'done' | 'error', result, error }
+// 항목: { id, date, prompt, conditions, status: 'loading' | 'done' | 'error', result, error, errorCode }
 
 const STORAGE_KEY = 'recommendationHistory';
 const MAX_ENTRIES = 20;
@@ -44,6 +44,12 @@ function updateEntry(id, patch) {
   });
 }
 
+// 백엔드 ErrorCode 와 HTTP 상태를 "NL2SQL_EXECUTION_FAILED · 422" 처럼 붙인다. 서버에 닿지 못했으면 null.
+function formatErrorCode(error) {
+  const parts = [error?.code, error?.status].filter(Boolean);
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
+
 function formatDate(date) {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
 }
@@ -52,13 +58,24 @@ function formatDate(date) {
 export function submitQuestion(prompt, conditions = null) {
   const now = new Date();
   const id = `${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`;
-  const entry = { id, date: formatDate(now), prompt, conditions, status: 'loading', result: null, error: null };
+  const entry = {
+    id,
+    date: formatDate(now),
+    prompt,
+    conditions,
+    status: 'loading',
+    result: null,
+    error: null,
+    errorCode: null,
+  };
 
   setState({ entries: [entry, ...state.entries].slice(0, MAX_ENTRIES), selectedId: id });
 
   queryNl2Sql(prompt)
     .then((result) => updateEntry(id, { status: 'done', result }))
-    .catch((error) => updateEntry(id, { status: 'error', error: error.message }));
+    .catch((error) =>
+      updateEntry(id, { status: 'error', error: error.message, errorCode: formatErrorCode(error) }),
+    );
 }
 
 export function selectEntry(id) {

@@ -3,7 +3,7 @@
 /**
  * 자연어 질의. 응답: NlQueryResponse { question, sql, columns, rows, rowCount }
  * rows 의 각 항목은 { 컬럼명: 값 } 형태다.
- * 실패하면 백엔드 ErrorResponse 의 message 를 담은 Error 를 던진다.
+ * 실패하면 백엔드 ErrorResponse 의 message 를 담은 Error 를 던진다. code(ErrorCode 이름)와 status(HTTP 상태)도 함께 담는다.
  * @param {string} question
  * @param {AbortSignal} [signal]
  */
@@ -25,7 +25,10 @@ export async function queryNl2Sql(question, signal) {
 
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(body?.message ?? `질의에 실패했습니다. (${response.status})`);
+    throw Object.assign(new Error(body?.message ?? `질의에 실패했습니다. (${response.status})`), {
+      code: body?.code ?? null,
+      status: response.status,
+    });
   }
   return body;
 }
