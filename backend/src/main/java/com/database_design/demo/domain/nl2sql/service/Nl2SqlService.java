@@ -43,7 +43,7 @@ public class Nl2SqlService {
      */
     @Transactional(readOnly = true)
     public NlQueryResponse query(NlQueryRequest request) {
-        GeneratedQuery generated = nl2SqlClient.generate(request.question());
+        GeneratedQuery generated = nl2SqlClient.generate(request);
 
         if (!generated.isValid()) {
             log.warn("SQL 생성 실패 (retry_count={}): {}", generated.retryCount(), generated.error());
