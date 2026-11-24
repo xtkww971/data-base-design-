@@ -79,7 +79,7 @@ def get_schema(question: str) -> str:
     # modules, categories 테이블을 제외한 나머지에서 유사도 검색
     results = schema_collection.query(
         query_texts=[question],
-        n_results= 5 - len(REQUIRED_TABLES),
+        n_results= 6 - len(REQUIRED_TABLES),
         where_document={"$and": [{"$not_contains": f'"table": "{t}"'} for t in REQUIRED_TABLES]}
     )
 
