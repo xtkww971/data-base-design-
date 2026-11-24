@@ -1,8 +1,11 @@
 package com.database_design.demo.domain.nl2sql.client;
 
+import com.database_design.demo.domain.nl2sql.dto.NlQueryRequest;
 import com.database_design.demo.global.error.BusinessException;
 import com.database_design.demo.global.error.ErrorCode;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +26,12 @@ public class Nl2SqlClient {
     @Autowired
     private final RestClient nl2sqlRestClient;
 
-    public GeneratedQuery generate(String question) {
+    public GeneratedQuery generate(NlQueryRequest request) {
         try {
             GeneratedQuery result = nl2sqlRestClient.post()
                     .uri("/query")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new QueryRequest(question))
+                    .body(QueryRequest.from(request))
                     .retrieve()
                     .body(GeneratedQuery.class);
 
@@ -46,7 +49,23 @@ public class Nl2SqlClient {
         }
     }
 
-    private record QueryRequest(String question) {
+    /**
+     * nl2sql 의 QueryRequest 와 맞춘 전송 형태. 파이썬 쪽 필드명이 snake_case 라 그대로 맞춘다.
+     * 값이 없는 필드는 보내지 않고 파이썬 기본값(None)을 쓰게 한다.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private record QueryRequest(
+            String question,
+            List<String> programs,
+            @JsonProperty("budget_min") Integer budgetMin,
+            @JsonProperty("budget_max") Integer budgetMax) {
+
+        static QueryRequest from(NlQueryRequest request) {
+            List<String> programs = request.programs() == null || request.programs().isEmpty()
+                    ? null
+                    : request.programs();
+            return new QueryRequest(request.question(), programs, request.budgetMin(), request.budgetMax());
+        }
     }
 
     public record GeneratedQuery(
