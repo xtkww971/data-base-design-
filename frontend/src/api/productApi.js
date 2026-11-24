@@ -18,3 +18,35 @@ export async function searchProducts({ category = 'ALL', searchTerm = '', page =
   }
   return response.json();
 }
+
+// 카테고리별 상세 API 경로 (백엔드 각 Controller 의 @RequestMapping)
+const DETAIL_PATHS = {
+  CPU: 'cpus',
+  MAINBOARD: 'main-boards',
+  RAM: 'rams',
+  GPU: 'graphic-cards',
+  POWER: 'powers',
+  SSD: 'ssds',
+  HDD: 'hdds',
+  MONITOR: 'monitors',
+};
+
+/**
+ * 부품 상세. 응답은 카테고리별 DetailResponse { id, category, name, brand, price, imageUrl, performanceScore, specs }.
+ * @param {string} category ProductCategory
+ * @param {number} moduleId
+ * @param {AbortSignal} [signal]
+ */
+export async function fetchProductDetail(category, moduleId, signal) {
+  const path = DETAIL_PATHS[category];
+  if (!path) {
+    throw new Error('상세 정보를 지원하지 않는 부품입니다.');
+  }
+
+  const response = await fetch(`/api/modules/${path}/${moduleId}/detail`, { signal });
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.message ?? `상세 정보를 불러오지 못했습니다. (${response.status})`);
+  }
+  return response.json();
+}

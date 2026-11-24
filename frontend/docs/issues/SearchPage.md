@@ -32,6 +32,18 @@ align-self: start; /* 추가: 카드가 내용 높이만큼만 차지
 
 
 3-2 . 카테고리도 맘에 안듬
+수정: 
+.search-page__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 28px;
+   + margin-top: 35px;
+}
+
+OK
+
+페이지 제작은 이정도로만.
 
 4. 카테고리를 바꿀 때마다 푸터가 올라왔다가 내려가면서 깜빡이는 버그 수정 - OK
 
