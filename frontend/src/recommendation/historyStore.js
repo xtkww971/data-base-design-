@@ -71,7 +71,7 @@ export function submitQuestion(prompt, conditions = null) {
 
   setState({ entries: [entry, ...state.entries].slice(0, MAX_ENTRIES), selectedId: id });
 
-  queryNl2Sql(prompt)
+  queryNl2Sql(prompt, conditions)
     .then((result) => updateEntry(id, { status: 'done', result }))
     .catch((error) =>
       updateEntry(id, { status: 'error', error: error.message, errorCode: formatErrorCode(error) }),
