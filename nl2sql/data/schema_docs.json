@@ -15,7 +15,7 @@
       {"name": "category_id", "type": "INTEGER", "description": "카테고리 번호, categories.category_id 참조"},
       {"name": "name", "type": "TEXT", "description": "제품명. 예: AMD 라이젠5 5세대 7500F"},
       {"name": "brand", "type": "TEXT", "description": "제조사. 예: AMD, 인텔, 삼성전자, MSI, ASUS, WD, Seagate"},
-      {"name": "price", "type": "INTEGER", "description": "최저가. 원 단위 정수 (150만원 → 1500000)"},
+      {"name": "price", "type": "INTEGER", "description": "최저가. 원 단위 정수 (150만원 → 1500000). 0 이상"},
       {"name": "performance_score", "type": "INTEGER", "description": "성능 점수. 클수록 좋음. 카테고리마다 지표·단위가 달라 반드시 같은 category_id 안에서만 비교·정렬 (CPU 점수와 GPU 점수 비교 불가). CPU=PassMark CPU Mark(약 2만~5만), GPU=PassMark G3D Mark(약 1.6만~3.5만), SSD·HDD=PassMark Disk Rating(같은 척도, SSD 약 4천~5만, HDD 약 1천~3천), RAM=이론 대역폭 MB/s, POWER=80PLUS 효율 %(80~94), MONITOR=초당 픽셀 수 Mpx/s, MAINBOARD=항상 NULL. '성능 좋은', '빠른' 질문에 사용"},
       {"name": "image_url", "type": "TEXT", "description": "제품 이미지 URL. 유일하게 NULL 허용"}
     ]
@@ -25,34 +25,38 @@
     "description": "CPU 상세 정보",
     "columns": [
       {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
-      {"name": "socket", "type": "TEXT", "description": "소켓 규격. 메인보드 호환 판정 기준 (LGA1700, AM5, AM4, LGA1851)"},
-      {"name": "cores", "type": "INTEGER", "description": "코어 수 (4~24)"},
-      {"name": "threads", "type": "INTEGER", "description": "스레드 수 (8~32)"},
-      {"name": "has_graphics", "type": "BIT", "description": "내장 그래픽 유무 (1=있음, 0=없음)"},
-      {"name": "clock_speed", "type": "TEXT", "description": "동작 클럭 문자열 (2.1GHz~4.7GHz). 문자열이라 수치 비교 불가"}
+      {"name": "socket", "type": "TEXT", "description": "소켓 규격. sockets.socket 참조. 메인보드 호환 판정 기준 (LGA1700, AM5, AM4)"},
+      {"name": "cores", "type": "INTEGER", "description": "코어 수 (2~24)"},
+      {"name": "threads", "type": "INTEGER", "description": "스레드 수 (2~32). 항상 cores 이상"},
+      {"name": "has_graphics", "type": "BIT", "description": "내장 그래픽 유무 (1=있음, 0=없음). 그래픽카드 없이 견적을 짜려면 1이어야 함"},
+      {"name": "clock_speed", "type": "TEXT", "description": "동작 클럭 문자열 (2.1GHz~4.7GHz). 문자열이라 수치 비교 불가"},
+      {"name": "tdp_watt", "type": "INTEGER", "description": "CPU TDP(열설계전력), 단위 W (35~170). 모르면 NULL. chipsets.rated_cpu_tdp_watt 와 비교해 W5 경고 판정"},
+      {"name": "overclockable", "type": "BIT", "description": "배수 제한 해제(오버클럭 가능) 여부 (1=가능, 인텔 K/KF·AMD 대부분, 0=불가). 모르면 NULL. W4 경고 판정에 사용"}
     ]
   },
   {
     "table": "main_boards",
-    "description": "메인보드 상세 정보",
+    "description": "메인보드 상세 정보. (socket, memory_spec) 은 socket_memory_specs, (chipset, socket) 은 chipsets 에 존재하는 조합만 허용",
     "columns": [
       {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
-      {"name": "socket", "type": "TEXT", "description": "지원 소켓. CPU 호환 판정 기준 (LGA1700, AM5, AM4, LGA1851)"},
-      {"name": "form_factor", "type": "TEXT", "description": "보드 크기 (ATX, M-ATX, M-ITX)"},
+      {"name": "socket", "type": "TEXT", "description": "지원 소켓. CPU 호환 판정 기준 (LGA1700, AM5, AM4)"},
+      {"name": "form_factor", "type": "TEXT", "description": "보드 크기 (ATX, M-ATX, Mini-ITX, E-ATX)"},
       {"name": "memory_spec", "type": "TEXT", "description": "지원 메모리 규격. RAM 호환 판정 기준 (DDR5, DDR4)"},
       {"name": "memory_slots", "type": "INTEGER", "description": "메모리 슬롯 개수 (2 또는 4)"},
-      {"name": "chipset", "type": "TEXT", "description": "칩셋명. AMD계: A520, A620, B550, B650, B650E, B850, X570, X670E, X870, X870E / 인텔계: H610, B760, B860, Z790, Z890"}
+      {"name": "max_memory_gb", "type": "INTEGER", "description": "보드가 지원하는 최대 메모리 총 용량, 단위 GB (64, 96, 128, 192, 256). 모르면 NULL. 램 총 용량(capacity × 수량)이 이 값 이하여야 함"},
+      {"name": "has_video_output", "type": "BIT", "description": "보드 후면 영상 출력 단자(HDMI/DP) 유무 (1=있음, 0=없음). 모르면 NULL. 그래픽카드 없이 내장 그래픽을 쓰려면 1이어야 함"},
+      {"name": "chipset", "type": "TEXT", "description": "칩셋명, chipsets.chipset 참조. AMD AM5: A620, B840, B650, B650E, B850, X670, X670E, X870, X870E / AMD AM4: A520, B450, B550, X570 / 인텔 LGA1700: H610, B660, B760, H670, H770, Z690, Z790"}
     ]
   },
   {
     "table": "rams",
-    "description": "램 상세 정보",
+    "description": "램 상세 정보. 한 행은 판매 단위 키트 1개",
     "columns": [
       {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
-      {"name": "memory_spec", "type": "TEXT", "description": "메모리 규격 (DDR5, DDR4)"},
-      {"name": "capacity", "type": "INTEGER", "description": "표기 용량, 단위 GB (8, 16, 32, 64)"},
-      {"name": "clock", "type": "INTEGER", "description": "동작 클럭, 단위 MHz (3200~7200)"},
-      {"name": "package_count", "type": "INTEGER", "description": "패키지 개수 (1=단품, 2=듀얼 구성)"}
+      {"name": "memory_spec", "type": "TEXT", "description": "메모리 규격, memory_specs.memory_spec 참조 (DDR5, DDR4)"},
+      {"name": "capacity", "type": "INTEGER", "description": "키트 전체 용량, 단위 GB (8~128). 예: 32GB(16Gx2) → 32"},
+      {"name": "clock", "type": "INTEGER", "description": "동작 클럭, 단위 MT/s (흔히 MHz로 표기, 2666~7200)"},
+      {"name": "package_count", "type": "INTEGER", "description": "키트에 든 모듈(스틱) 개수 (1=단품, 2=듀얼 키트, 4=쿼드 키트). 보드 memory_slots 이하여야 장착 가능"}
     ]
   },
   {
@@ -64,7 +68,9 @@
       {"name": "memory_type", "type": "TEXT", "description": "VRAM 종류 (GDDR6, GDDR6X, GDDR7)"},
       {"name": "memory_capacity", "type": "INTEGER", "description": "VRAM 용량, 단위 GB (8~32)"},
       {"name": "length_mm", "type": "INTEGER", "description": "가로 길이, 단위 mm (236~386). 케이스 장착 공간 확인용"},
-      {"name": "recommended_power", "type": "INTEGER", "description": "권장 파워 용량, 단위 W (550~1000). 파워 호환 판정 기준이며 카드 자체 소비전력이 아님"},
+      {"name": "recommended_power", "type": "INTEGER", "description": "권장 파워 용량, 단위 W (550~1000). 파워 호환 판정 기준(power.rated_power 이상 필요)이며 카드 자체 소비전력이 아님"},
+      {"name": "uses_16pin", "type": "BIT", "description": "보조전원으로 16핀(12VHPWR/12V-2x6) 커넥터를 쓰는지 (1=16핀, 0=8핀)"},
+      {"name": "pcie_8pin_count", "type": "INTEGER", "description": "필요한 PCIe 8핀 보조전원 개수 (1~4). 16핀 카드는 동봉 어댑터가 요구하는 8핀 개수"},
       {"name": "ports", "type": "TEXT", "description": "출력 단자 서술 문자열. 예: HDMI 2.1 x1, DP 1.4a x3"}
     ]
   },
@@ -74,6 +80,8 @@
     "columns": [
       {"name": "module_id", "type": "INTEGER", "description": "부품 번호, PK, modules.module_id 참조"},
       {"name": "rated_power", "type": "INTEGER", "description": "정격 출력, 단위 W (500~1200)"},
+      {"name": "has_16pin", "type": "BIT", "description": "16핀(12VHPWR/12V-2x6) 커넥터 제공 여부 (1=있음, 0=없음)"},
+      {"name": "pcie_8pin_count", "type": "INTEGER", "description": "제공하는 PCIe 8핀 보조전원 커넥터 개수 (1~8)"},
       {"name": "certification", "type": "TEXT", "description": "80PLUS 인증 등급 (80PLUS STANDARD, 80PLUS BRONZE, 80PLUS SILVER, 80PLUS GOLD, 80PLUS PLATINUM, 80PLUS TITANIUM). 접두어 포함 대문자"},
       {"name": "form_factor", "type": "TEXT", "description": "파워 규격 (ATX, SFX)"}
     ]
@@ -121,6 +129,144 @@
       {"name": "password", "type": "TEXT", "description": "BCrypt 해시. 조회 대상에 넣지 않는다"},
       {"name": "nickname", "type": "TEXT", "description": "화면 표시용 닉네임"},
       {"name": "created_at", "type": "DATETIME", "description": "가입 시각"}
+    ]
+  },
+  {
+    "table": "sockets",
+    "description": "CPU 소켓 조회 테이블. cpus.socket, main_boards.socket 이 참조하는 고정값 목록",
+    "columns": [
+      {"name": "socket", "type": "TEXT", "description": "소켓 이름, PK (LGA1700, AM4, AM5)"}
+    ]
+  },
+  {
+    "table": "memory_specs",
+    "description": "메모리 규격 조회 테이블. rams.memory_spec, main_boards.memory_spec 이 참조하는 고정값 목록",
+    "columns": [
+      {"name": "memory_spec", "type": "TEXT", "description": "메모리 규격, PK (DDR4, DDR5)"}
+    ]
+  },
+  {
+    "table": "socket_memory_specs",
+    "description": "소켓이 지원하는 메모리 규격. 메인보드를 고르기 전 CPU 와 램의 규격 호환을 확인할 때 사용. LGA1700=DDR4·DDR5 둘 다, AM4=DDR4, AM5=DDR5",
+    "columns": [
+      {"name": "socket", "type": "TEXT", "description": "소켓, sockets.socket 참조. PK (socket, memory_spec)"},
+      {"name": "memory_spec", "type": "TEXT", "description": "지원 메모리 규격, memory_specs.memory_spec 참조"}
+    ]
+  },
+  {
+    "table": "chipsets",
+    "description": "메인보드 칩셋 정보. main_boards.chipset 과 조인해 칩셋의 소켓·오버클럭 지원·TDP 상한을 얻는다",
+    "columns": [
+      {"name": "chipset", "type": "TEXT", "description": "칩셋명, PK. 예: Z790, B760, H610, X870E, B650, A620, B550"},
+      {"name": "socket", "type": "TEXT", "description": "칩셋이 속한 소켓, sockets.socket 참조"},
+      {"name": "supports_cpu_oc", "type": "BIT", "description": "CPU 오버클럭 지원 여부 (1=지원). 인텔은 Z 시리즈만, AMD는 A 시리즈와 B840 을 제외한 칩셋이 1. '오버클럭 되는 보드' 질문에 사용"},
+      {"name": "rated_cpu_tdp_watt", "type": "INTEGER", "description": "칩셋이 상정하는 CPU TDP 상한, 단위 W. 제한이 알려지지 않았으면 NULL (현재 A620 만 65)"}
+    ]
+  },
+  {
+    "table": "cpu_memory_clocks",
+    "description": "CPU 가 공식 지원하는 메모리 클럭. 메모리 규격별, 장착 모듈 수(2개/4개)별로 다름. CPU 가 지원하는 규격만 행이 있다 (인텔 LGA1700 은 DDR4·DDR5 두 행)",
+    "columns": [
+      {"name": "cpu_id", "type": "INTEGER", "description": "CPU 부품 번호, cpus.module_id 참조. PK (cpu_id, memory_spec)"},
+      {"name": "memory_spec", "type": "TEXT", "description": "메모리 규격 (DDR4, DDR5)"},
+      {"name": "max_clock_2dimm", "type": "INTEGER", "description": "모듈 2개 이하 장착 시 공식 지원 클럭, 단위 MT/s (3200~5600). rams.clock 이 이보다 높으면 W1 경고(XMP/EXPO 필요)"},
+      {"name": "max_clock_4dimm", "type": "INTEGER", "description": "모듈 4개 장착 시 공식 지원 클럭, 단위 MT/s (2667~4400). 모르면 NULL"}
+    ]
+  },
+  {
+    "table": "warning_rules",
+    "description": "견적 경고 규칙의 벌점과 안내 문구. 경고 뷰(v_cpu_board_warnings, v_cpu_ram_warnings, v_build_warnings)의 warning_code 와 조인해 사용. 벌점 합이 낮을수록 좋은 조합. W1=램 클럭이 CPU 공식 지원보다 높음(벌점 0), W2=램 4개 장착 시 지원 클럭 저하(20), W3=램 1개라 싱글 채널(30), W4=오버클럭 CPU 인데 보드가 오버클럭 미지원(20), W5=CPU TDP 가 칩셋 상정치 초과(20)",
+    "columns": [
+      {"name": "warning_code", "type": "TEXT", "description": "경고 코드, PK (W1, W2, W3, W4, W5)"},
+      {"name": "penalty", "type": "INTEGER", "description": "벌점. 0 이면 안내만 하고 정렬에는 영향 없음"},
+      {"name": "message", "type": "TEXT", "description": "경고 안내 문구"},
+      {"name": "how_to_avoid", "type": "TEXT", "description": "경고를 피하는 방법 안내 문구"}
+    ]
+  },
+  {
+    "table": "v_cpu_board_compat",
+    "description": "뷰. 소켓이 같아 호환되는 CPU × 메인보드 쌍만 담는다. 'CPU 에 맞는 보드', '호환되는 메인보드' 질문에 사용",
+    "columns": [
+      {"name": "cpu_id", "type": "INTEGER", "description": "CPU 부품 번호, cpus.module_id"},
+      {"name": "board_id", "type": "INTEGER", "description": "메인보드 부품 번호, main_boards.module_id"}
+    ]
+  },
+  {
+    "table": "v_ram_board_compat",
+    "description": "뷰. 메모리 규격이 같고 키트 하나가 보드 슬롯 수·최대 용량 안에 들어가는 램 × 메인보드 쌍. '보드에 맞는 램' 질문에 사용",
+    "columns": [
+      {"name": "ram_id", "type": "INTEGER", "description": "램 부품 번호, rams.module_id"},
+      {"name": "board_id", "type": "INTEGER", "description": "메인보드 부품 번호, main_boards.module_id"},
+      {"name": "max_kits", "type": "INTEGER", "description": "이 보드에 이 램 키트를 최대 몇 세트 꽂을 수 있는지 (슬롯 수와 최대 용량 기준)"}
+    ]
+  },
+  {
+    "table": "v_cpu_ram_compat",
+    "description": "뷰. 메인보드를 아직 고르지 않았을 때 CPU 소켓이 지원하는 규격의 램 쌍. 'CPU 에 맞는 램' 질문에 사용",
+    "columns": [
+      {"name": "cpu_id", "type": "INTEGER", "description": "CPU 부품 번호, cpus.module_id"},
+      {"name": "ram_id", "type": "INTEGER", "description": "램 부품 번호, rams.module_id"}
+    ]
+  },
+  {
+    "table": "v_gpu_power_compat",
+    "description": "뷰. 파워 정격 출력이 그래픽카드 권장 파워 이상이고 보조전원 커넥터(8핀 개수 또는 16핀)가 맞는 그래픽카드 × 파워 쌍. '그래픽카드에 맞는 파워' 질문에 사용",
+    "columns": [
+      {"name": "gpu_id", "type": "INTEGER", "description": "그래픽카드 부품 번호, graphic_cards.module_id"},
+      {"name": "power_id", "type": "INTEGER", "description": "파워 부품 번호, power.module_id"}
+    ]
+  },
+  {
+    "table": "v_cpu_board_warnings",
+    "description": "뷰. 소켓이 맞는 CPU × 메인보드 쌍 중 경고(W4 오버클럭 불가, W5 TDP 초과)가 있는 쌍. 한 쌍에 경고가 여러 행일 수 있다. warning_rules 와 조인해 벌점을 더하고, 이 뷰에 없는 쌍은 경고 없음",
+    "columns": [
+      {"name": "cpu_id", "type": "INTEGER", "description": "CPU 부품 번호"},
+      {"name": "board_id", "type": "INTEGER", "description": "메인보드 부품 번호"},
+      {"name": "warning_code", "type": "TEXT", "description": "경고 코드 (W4, W5), warning_rules.warning_code"}
+    ]
+  },
+  {
+    "table": "v_cpu_ram_warnings",
+    "description": "뷰. 램 키트 하나를 담는다고 가정한 CPU × 램 쌍의 경고(W1 클럭 초과, W2 4개 장착 클럭 저하, W3 싱글 채널). warning_rules 와 조인해 벌점을 더하고, 이 뷰에 없는 쌍은 경고 없음",
+    "columns": [
+      {"name": "cpu_id", "type": "INTEGER", "description": "CPU 부품 번호"},
+      {"name": "ram_id", "type": "INTEGER", "description": "램 부품 번호"},
+      {"name": "warning_code", "type": "TEXT", "description": "경고 코드 (W1, W2, W3), warning_rules.warning_code"}
+    ]
+  },
+  {
+    "table": "builds",
+    "description": "유저가 저장한 PC 견적. 부품 칸마다 id 와 호환 비교용 스펙 복사본을 둔다. 부품 이름·가격은 각 *_id 로 modules 와 조인해 얻는다. 저장장치는 build_storages 에 있다",
+    "columns": [
+      {"name": "build_id", "type": "INTEGER", "description": "견적 번호, PK"},
+      {"name": "user_id", "type": "INTEGER", "description": "작성자, users.user_id 참조"},
+      {"name": "title", "type": "TEXT", "description": "견적 제목"},
+      {"name": "status", "type": "TEXT", "description": "DRAFT(작성 중, 빈 칸 허용) 또는 COMPLETE(필수 부품이 모두 찬 완성 견적)"},
+      {"name": "cpu_id", "type": "INTEGER", "description": "CPU 부품 번호, cpus.module_id. 비어 있으면 NULL"},
+      {"name": "board_id", "type": "INTEGER", "description": "메인보드 부품 번호, main_boards.module_id"},
+      {"name": "ram_id", "type": "INTEGER", "description": "램 부품 번호, rams.module_id"},
+      {"name": "ram_quantity", "type": "INTEGER", "description": "램 키트 수량. 총 램 용량 = ram_capacity × ram_quantity"},
+      {"name": "gpu_id", "type": "INTEGER", "description": "그래픽카드 부품 번호, graphic_cards.module_id. 내장 그래픽 사용 시 NULL"},
+      {"name": "power_id", "type": "INTEGER", "description": "파워 부품 번호, power.module_id"},
+      {"name": "cpu_socket, cpu_has_graphics, board_socket, board_memory_spec, board_memory_slots, board_max_memory_gb, board_has_video_output, ram_memory_spec, ram_package_count, ram_capacity, gpu_recommended_power, gpu_uses_16pin, gpu_pcie_8pin_count, power_rated_power, power_has_16pin, power_pcie_8pin_count", "type": "MIXED", "description": "각 부품 원본 스펙의 복사본. 원본 테이블 값과 항상 같으므로 조회 시에는 원본 테이블과 조인해도 된다"},
+      {"name": "created_at", "type": "DATETIME", "description": "견적 저장 시각"}
+    ]
+  },
+  {
+    "table": "build_storages",
+    "description": "견적에 담긴 저장장치(SSD, HDD). 견적 하나에 여러 개 가능",
+    "columns": [
+      {"name": "build_id", "type": "INTEGER", "description": "견적 번호, builds.build_id 참조. PK (build_id, module_id)"},
+      {"name": "module_id", "type": "INTEGER", "description": "저장장치 부품 번호, modules.module_id 참조"},
+      {"name": "quantity", "type": "INTEGER", "description": "수량 (1 이상)"}
+    ]
+  },
+  {
+    "table": "v_build_warnings",
+    "description": "뷰. 저장된 견적(builds)의 경고 목록. 램 수량까지 반영해 W1~W5 를 판정. warning_rules 와 조인해 벌점·문구를 얻는다",
+    "columns": [
+      {"name": "build_id", "type": "INTEGER", "description": "견적 번호, builds.build_id"},
+      {"name": "warning_code", "type": "TEXT", "description": "경고 코드 (W1~W5), warning_rules.warning_code"}
     ]
   }
 ]

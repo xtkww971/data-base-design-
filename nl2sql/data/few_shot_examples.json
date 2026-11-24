@@ -1,23 +1,31 @@
 [
   {
+    "question": "배틀그라운드 할건데 150만원 이하로 견적 맞춰줘",
+    "sql": "WITH cpu AS (SELECT c.module_id FROM cpus c JOIN modules m ON m.module_id = c.module_id WHERE c.cores >= 4 AND m.price <= 300000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), board AS (SELECT v.board_id AS module_id FROM v_cpu_board_compat v JOIN cpu ON cpu.module_id = v.cpu_id JOIN modules m ON m.module_id = v.board_id LEFT JOIN v_cpu_board_warnings w ON w.cpu_id = v.cpu_id AND w.board_id = v.board_id WHERE m.price <= 150000 ORDER BY w.warning_code IS NOT NULL, m.price ASC LIMIT 1), ram AS (SELECT v.ram_id AS module_id FROM v_ram_board_compat v JOIN board ON board.module_id = v.board_id JOIN rams r ON r.module_id = v.ram_id JOIN modules m ON m.module_id = v.ram_id WHERE r.capacity >= 16 AND r.package_count >= 2 AND m.price <= 150000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), gpu AS (SELECT g.module_id FROM graphic_cards g JOIN modules m ON m.module_id = g.module_id WHERE g.memory_capacity >= 3 AND m.price <= 600000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), psu AS (SELECT v.power_id AS module_id FROM v_gpu_power_compat v JOIN gpu ON gpu.module_id = v.gpu_id JOIN modules m ON m.module_id = v.power_id WHERE m.price <= 150000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), ssd AS (SELECT s.module_id FROM ssds s JOIN modules m ON m.module_id = s.module_id WHERE s.capacity >= 30 AND m.price <= 150000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), picked AS (SELECT module_id FROM cpu UNION ALL SELECT module_id FROM board UNION ALL SELECT module_id FROM ram UNION ALL SELECT module_id FROM gpu UNION ALL SELECT module_id FROM psu UNION ALL SELECT module_id FROM ssd) SELECT ct.category_name, m.module_id, m.category_id, m.name, m.brand, m.price, m.performance_score, m.image_url, SUM(m.price) OVER () AS total_price FROM picked p JOIN modules m ON m.module_id = p.module_id JOIN categories ct ON ct.category_id = m.category_id ORDER BY m.category_id"
+  },
+  {
+    "question": "프리미어 프로로 영상 편집할 컴퓨터 200만원 안으로 맞춰줘",
+    "sql": "WITH cpu AS (SELECT c.module_id FROM cpus c JOIN modules m ON m.module_id = c.module_id WHERE c.cores >= 8 AND m.price <= 500000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), board AS (SELECT v.board_id AS module_id FROM v_cpu_board_compat v JOIN cpu ON cpu.module_id = v.cpu_id JOIN modules m ON m.module_id = v.board_id LEFT JOIN v_cpu_board_warnings w ON w.cpu_id = v.cpu_id AND w.board_id = v.board_id WHERE m.price <= 200000 ORDER BY w.warning_code IS NOT NULL, m.price ASC LIMIT 1), ram AS (SELECT v.ram_id AS module_id FROM v_ram_board_compat v JOIN board ON board.module_id = v.board_id JOIN rams r ON r.module_id = v.ram_id JOIN modules m ON m.module_id = v.ram_id WHERE r.capacity >= 32 AND r.package_count >= 2 AND m.price <= 300000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), gpu AS (SELECT g.module_id FROM graphic_cards g JOIN modules m ON m.module_id = g.module_id WHERE g.memory_capacity >= 8 AND m.price <= 600000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), psu AS (SELECT v.power_id AS module_id FROM v_gpu_power_compat v JOIN gpu ON gpu.module_id = v.gpu_id JOIN modules m ON m.module_id = v.power_id WHERE m.price <= 200000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), ssd AS (SELECT s.module_id FROM ssds s JOIN modules m ON m.module_id = s.module_id WHERE m.price <= 200000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), picked AS (SELECT module_id FROM cpu UNION ALL SELECT module_id FROM board UNION ALL SELECT module_id FROM ram UNION ALL SELECT module_id FROM gpu UNION ALL SELECT module_id FROM psu UNION ALL SELECT module_id FROM ssd) SELECT ct.category_name, m.module_id, m.category_id, m.name, m.brand, m.price, m.performance_score, m.image_url, SUM(m.price) OVER () AS total_price FROM picked p JOIN modules m ON m.module_id = p.module_id JOIN categories ct ON ct.category_id = m.category_id ORDER BY m.category_id"
+  },
+  {
+    "question": "그래픽카드 없이 사무용으로 쓸 80만원짜리 컴퓨터 견적 짜줘",
+    "sql": "WITH cpu AS (SELECT c.module_id FROM cpus c JOIN modules m ON m.module_id = c.module_id WHERE c.has_graphics = 1 AND m.price <= 280000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), board AS (SELECT v.board_id AS module_id FROM v_cpu_board_compat v JOIN cpu ON cpu.module_id = v.cpu_id JOIN main_boards mb ON mb.module_id = v.board_id JOIN modules m ON m.module_id = v.board_id LEFT JOIN v_cpu_board_warnings w ON w.cpu_id = v.cpu_id AND w.board_id = v.board_id WHERE mb.has_video_output = 1 AND m.price <= 160000 ORDER BY w.warning_code IS NOT NULL, m.price ASC LIMIT 1), ram AS (SELECT v.ram_id AS module_id FROM v_ram_board_compat v JOIN board ON board.module_id = v.board_id JOIN rams r ON r.module_id = v.ram_id JOIN modules m ON m.module_id = v.ram_id WHERE r.capacity >= 16 AND r.package_count >= 2 AND m.price <= 160000 ORDER BY m.price ASC LIMIT 1), psu AS (SELECT p.module_id FROM power p JOIN modules m ON m.module_id = p.module_id WHERE m.price <= 80000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), ssd AS (SELECT s.module_id FROM ssds s JOIN modules m ON m.module_id = s.module_id WHERE s.capacity >= 500 AND m.price <= 120000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 1), picked AS (SELECT module_id FROM cpu UNION ALL SELECT module_id FROM board UNION ALL SELECT module_id FROM ram UNION ALL SELECT module_id FROM psu UNION ALL SELECT module_id FROM ssd) SELECT ct.category_name, m.module_id, m.category_id, m.name, m.brand, m.price, m.performance_score, m.image_url, SUM(m.price) OVER () AS total_price FROM picked p JOIN modules m ON m.module_id = p.module_id JOIN categories ct ON ct.category_id = m.category_id ORDER BY m.category_id"
+  },
+  {
+    "question": "배그 할 그래픽카드 60만원 이하로 추천해줘",
+    "sql": "SELECT m.module_id, m.category_id, m.name, m.brand, m.price, m.performance_score, m.image_url, g.chipset, g.memory_capacity FROM modules m JOIN graphic_cards g ON g.module_id = m.module_id WHERE g.memory_capacity >= 3 AND m.price <= 600000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 5"
+  },
+  {
+    "question": "롤 할 건데 30만원 이하 CPU 뭐가 좋아?",
+    "sql": "SELECT m.module_id, m.category_id, m.name, m.brand, m.price, m.performance_score, m.image_url, c.cores, c.threads, c.has_graphics FROM modules m JOIN cpus c ON c.module_id = m.module_id WHERE c.cores >= 4 AND m.price <= 300000 ORDER BY m.performance_score DESC, m.price ASC LIMIT 5"
+  },
+  {
+    "question": "가성비 좋은 그래픽카드 추천해줘",
+    "sql": "SELECT m.module_id, m.category_id, m.name, m.brand, m.price, m.performance_score, m.image_url, g.chipset, g.memory_capacity, ROUND(m.performance_score / m.price * 10000, 2) AS score_per_10k_won FROM modules m JOIN graphic_cards g ON g.module_id = m.module_id ORDER BY m.performance_score / m.price DESC LIMIT 5"
+  },
+  {
     "question": "가장 저렴한 CPU 5개 알려줘",
     "sql": "SELECT m.name, m.brand, m.price FROM modules m JOIN cpus c ON c.module_id = m.module_id ORDER BY m.price ASC LIMIT 5"
-  },
-  {
-    "question": "카테고리별 부품이 몇 개씩 있어?",
-    "sql": "SELECT ct.category_name, COUNT(*) AS part_count FROM categories ct JOIN modules m ON m.category_id = ct.category_id GROUP BY ct.category_id, ct.category_name ORDER BY part_count DESC"
-  },
-  {
-    "question": "카테고리별 평균 가격을 보여줘",
-    "sql": "SELECT ct.category_name, ROUND(AVG(m.price)) AS avg_price FROM categories ct JOIN modules m ON m.category_id = ct.category_id GROUP BY ct.category_id, ct.category_name ORDER BY avg_price DESC"
-  },
-  {
-    "question": "가장 비싼 부품 5개와 카테고리를 알려줘",
-    "sql": "SELECT m.name, ct.category_name, m.price FROM modules m JOIN categories ct ON ct.category_id = m.category_id ORDER BY m.price DESC LIMIT 5"
-  },
-  {
-    "question": "삼성전자 제품은 몇 개야?",
-    "sql": "SELECT COUNT(*) AS samsung_count FROM modules WHERE brand = '삼성전자'"
   },
   {
     "question": "내장 그래픽이 있는 CPU 중 20만원 이하 제품 보여줘",
@@ -32,12 +40,16 @@
     "sql": "SELECT m.name, c.clock_speed, m.price FROM modules m JOIN cpus c ON c.module_id = m.module_id ORDER BY CAST(REPLACE(c.clock_speed, 'GHz', '') AS DECIMAL(3,1)) DESC, m.price ASC LIMIT 3"
   },
   {
-    "question": "코어 하나당 가격이 가장 저렴한 CPU 3개는?",
-    "sql": "SELECT m.name, c.cores, m.price, ROUND(m.price / c.cores) AS price_per_core FROM modules m JOIN cpus c ON c.module_id = m.module_id ORDER BY m.price / c.cores ASC LIMIT 3"
+    "question": "TDP 65W 이하인 저전력 CPU를 싼 순서로 보여줘",
+    "sql": "SELECT m.name, c.tdp_watt, c.cores, c.threads, m.price FROM modules m JOIN cpus c ON c.module_id = m.module_id WHERE c.tdp_watt <= 65 ORDER BY m.price ASC"
   },
   {
-    "question": "소켓별 CPU가 몇 개씩 있어?",
-    "sql": "SELECT socket, COUNT(*) AS cpu_count FROM cpus GROUP BY socket ORDER BY cpu_count DESC"
+    "question": "오버클럭 가능한 CPU 중 가장 저렴한 3개는?",
+    "sql": "SELECT m.name, c.cores, c.tdp_watt, m.price FROM modules m JOIN cpus c ON c.module_id = m.module_id WHERE c.overclockable = 1 ORDER BY m.price ASC LIMIT 3"
+  },
+  {
+    "question": "i5-13600K는 램 클럭 몇까지 지원해?",
+    "sql": "SELECT cm.memory_spec, cm.max_clock_2dimm, cm.max_clock_4dimm FROM cpu_memory_clocks cm WHERE cm.cpu_id = (SELECT m.module_id FROM modules m JOIN cpus c ON c.module_id = m.module_id WHERE m.name LIKE '%i5-13600K' LIMIT 1)"
   },
   {
     "question": "AM5 소켓이면서 DDR5를 지원하는 메인보드를 싼 순서로 보여줘",
@@ -45,11 +57,27 @@
   },
   {
     "question": "라이젠5 7500F랑 호환되는 메인보드 추천해줘",
-    "sql": "SELECT mm.name, mm.brand, mm.price, mb.chipset, mb.form_factor FROM modules mc JOIN cpus c ON c.module_id = mc.module_id JOIN main_boards mb ON mb.socket = c.socket JOIN modules mm ON mm.module_id = mb.module_id WHERE mc.name LIKE '%7500F%' ORDER BY mm.price ASC"
+    "sql": "SELECT m.name, m.brand, m.price, mb.chipset, mb.form_factor FROM v_cpu_board_compat v JOIN main_boards mb ON mb.module_id = v.board_id JOIN modules m ON m.module_id = v.board_id WHERE v.cpu_id = (SELECT mc.module_id FROM modules mc JOIN cpus c ON c.module_id = mc.module_id WHERE mc.name LIKE '%7500F%' ORDER BY mc.price ASC LIMIT 1) ORDER BY m.price ASC"
+  },
+  {
+    "question": "i5-13600K에 맞는 메인보드를 경고가 적은 순서로 추천해줘",
+    "sql": "SELECT m.name, m.price, mb.chipset, COALESCE(SUM(wr.penalty), 0) AS total_penalty, GROUP_CONCAT(w.warning_code) AS warnings FROM v_cpu_board_compat v JOIN main_boards mb ON mb.module_id = v.board_id JOIN modules m ON m.module_id = v.board_id LEFT JOIN v_cpu_board_warnings w ON w.cpu_id = v.cpu_id AND w.board_id = v.board_id LEFT JOIN warning_rules wr ON wr.warning_code = w.warning_code WHERE v.cpu_id = (SELECT mc.module_id FROM modules mc JOIN cpus c ON c.module_id = mc.module_id WHERE mc.name LIKE '%i5-13600K' LIMIT 1) GROUP BY v.board_id, m.name, m.price, mb.chipset ORDER BY total_penalty ASC, m.price ASC LIMIT 10"
+  },
+  {
+    "question": "CPU 오버클럭을 지원하는 메인보드 중 싼 것 5개 보여줘",
+    "sql": "SELECT m.name, mb.chipset, mb.socket, m.price FROM modules m JOIN main_boards mb ON mb.module_id = m.module_id JOIN chipsets ch ON ch.chipset = mb.chipset WHERE ch.supports_cpu_oc = 1 ORDER BY m.price ASC LIMIT 5"
+  },
+  {
+    "question": "그래픽카드 없이 내장 그래픽으로 쓸 수 있는 메인보드 알려줘",
+    "sql": "SELECT m.name, mb.chipset, mb.socket, m.price FROM modules m JOIN main_boards mb ON mb.module_id = m.module_id WHERE mb.has_video_output = 1 ORDER BY m.price ASC"
   },
   {
     "question": "B650 칩셋 메인보드와 호환되는 램을 싼 순서로 보여줘",
-    "sql": "SELECT DISTINCT mr.name, mr.price, r.memory_spec, r.capacity, r.clock FROM main_boards mb JOIN rams r ON r.memory_spec = mb.memory_spec JOIN modules mr ON mr.module_id = r.module_id WHERE mb.chipset = 'B650' ORDER BY mr.price ASC"
+    "sql": "SELECT DISTINCT mr.name, mr.price, r.memory_spec, r.capacity, r.clock, r.package_count FROM v_ram_board_compat v JOIN main_boards mb ON mb.module_id = v.board_id JOIN rams r ON r.module_id = v.ram_id JOIN modules mr ON mr.module_id = v.ram_id WHERE mb.chipset = 'B650' ORDER BY mr.price ASC"
+  },
+  {
+    "question": "라이젠7 7800X3D와 쓸 때 경고 없는 램을 싼 순서로 추천해줘",
+    "sql": "SELECT m.name, r.memory_spec, r.capacity, r.clock, r.package_count, m.price FROM v_cpu_ram_compat v JOIN rams r ON r.module_id = v.ram_id JOIN modules m ON m.module_id = v.ram_id WHERE v.cpu_id = (SELECT mc.module_id FROM modules mc JOIN cpus c ON c.module_id = mc.module_id WHERE mc.name LIKE '%7800X3D%' ORDER BY mc.price ASC LIMIT 1) AND NOT EXISTS (SELECT 1 FROM v_cpu_ram_warnings w JOIN warning_rules wr ON wr.warning_code = w.warning_code WHERE w.cpu_id = v.cpu_id AND w.ram_id = v.ram_id AND wr.penalty > 0) ORDER BY m.price ASC"
   },
   {
     "question": "DDR5 32GB 램 중 가장 저렴한 3개는?",
@@ -69,7 +97,11 @@
   },
   {
     "question": "RTX 5070에 맞는 파워 추천해줘",
-    "sql": "SELECT m.name, m.price, p.rated_power, p.certification FROM modules m JOIN power p ON p.module_id = m.module_id WHERE p.rated_power >= (SELECT MAX(recommended_power) FROM graphic_cards WHERE chipset = 'GeForce RTX 5070') ORDER BY m.price ASC"
+    "sql": "SELECT m.name, m.price, p.rated_power, p.certification, p.has_16pin, p.pcie_8pin_count FROM power p JOIN modules m ON m.module_id = p.module_id WHERE p.module_id IN (SELECT v.power_id FROM v_gpu_power_compat v JOIN graphic_cards g ON g.module_id = v.gpu_id WHERE g.chipset = 'GeForce RTX 5070' GROUP BY v.power_id HAVING COUNT(*) = (SELECT COUNT(*) FROM graphic_cards WHERE chipset = 'GeForce RTX 5070')) ORDER BY m.price ASC"
+  },
+  {
+    "question": "16핀 커넥터가 있는 1000W 이상 파워 알려줘",
+    "sql": "SELECT m.name, p.rated_power, p.certification, p.pcie_8pin_count, m.price FROM modules m JOIN power p ON p.module_id = m.module_id WHERE p.has_16pin = 1 AND p.rated_power >= 1000 ORDER BY m.price ASC"
   },
   {
     "question": "정격 출력 750W 이상이고 골드 등급 이상인 파워를 보여줘",
@@ -84,27 +116,11 @@
     "sql": "SELECT m.name, s.capacity, s.read_speed, s.write_speed, m.price FROM modules m JOIN ssds s ON s.module_id = m.module_id WHERE s.form_factor = 'M.2 2280' AND m.price <= 100000 ORDER BY m.price ASC"
   },
   {
-    "question": "브랜드별 SSD가 몇 개씩 있어?",
-    "sql": "SELECT m.brand, COUNT(*) AS ssd_count FROM modules m JOIN ssds s ON s.module_id = m.module_id GROUP BY m.brand ORDER BY ssd_count DESC"
-  },
-  {
     "question": "8TB 이상 HDD 중 가장 저렴한 제품은?",
     "sql": "SELECT m.name, h.capacity, h.rpm, m.price FROM modules m JOIN hdds h ON h.module_id = m.module_id WHERE h.capacity >= 8 ORDER BY m.price ASC LIMIT 1"
   },
   {
     "question": "27인치 이상 QHD 144Hz 이상 모니터 보여줘",
     "sql": "SELECT m.name, mo.screen_size, mo.resolution, mo.refresh_rate, mo.panel_type, m.price FROM modules m JOIN monitors mo ON mo.module_id = m.module_id WHERE mo.screen_size >= 27 AND mo.resolution = '2560x1440' AND mo.refresh_rate >= 144 ORDER BY m.price ASC"
-  },
-  {
-    "question": "가장 비싼 OLED 모니터 3개는?",
-    "sql": "SELECT m.name, mo.screen_size, mo.resolution, mo.refresh_rate, m.price FROM modules m JOIN monitors mo ON mo.module_id = m.module_id WHERE mo.panel_type = 'OLED' ORDER BY m.price DESC LIMIT 3"
-  },
-  {
-    "question": "제조사별 모니터 평균 가격을 알려줘",
-    "sql": "SELECT m.brand, ROUND(AVG(m.price)) AS avg_price FROM modules m JOIN monitors mo ON mo.module_id = m.module_id GROUP BY m.brand ORDER BY avg_price DESC"
-  },
-  {
-    "question": "가장 최근에 가입한 유저 5명의 닉네임을 알려줘",
-    "sql": "SELECT nickname FROM users ORDER BY created_at DESC LIMIT 5"
   }
 ]
