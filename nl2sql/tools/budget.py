@@ -6,9 +6,19 @@ BUDGET_RATIOS = {
     "사무": {"CPU": 35, "MAINBOARD": 20, "RAM": 20, "SSD": 15, "POWER": 10},
 }
 
+# DB modules 테이블의 카테고리별 최저가
+CATEGORY_MIN_PRICES = {
+    "CPU": 69000,
+    "GPU": 277000,
+    "MAINBOARD": 79000,
+    "RAM": 28000,
+    "SSD": 35000,
+    "POWER": 62000
+}
+
 def format_part_budgets(usage: str, budget_max: int) -> str:
-    """용도별 비율로 부품별 가격 상한을 계산해 프롬프트용 문자열로 반환"""
+    """용도별 비율로 부품별 가격 상한 프롬프트용 문자열로 반환"""
     return "\n".join(
-        f"- {part}: {budget_max * ratio // 100}원"
+        f"- {part}: {max(budget_max * ratio // 100, CATEGORY_MIN_PRICES.get(part, 0))}원"
         for part, ratio in BUDGET_RATIOS[usage].items()
     )
