@@ -16,9 +16,7 @@ import './RecommendationPage.css';
 
 const SIDEBAR_BREAKPOINT = 900; // 이 폭 이하면 자동으로 닫힘
 
-const defaultPrompt =
-  '300만원 안팎의 예산으로 컴퓨터 견적 맞춰줘.';
-
+const requestPlaceholder = '예: 램은 32GB 이상, 모니터는 27인치로 맞춰줘.';
 
 const MAX_PROGRAMS = 5;
 const MAN_WON = 10000;
@@ -171,7 +169,7 @@ const formatCell = (column, value, row) => {
   return String(value);
 };
 
-// 간편 입력 값을 자연어 질의 문장으로 바꾼다. 백엔드가 자연어만 받기 때문이다.
+// 프로그램·예산 값을 자연어 질의 문장으로 바꾼다. nl2sql 은 질문 문장을 기준으로 SQL 을 만들기 때문이다.
 const buildPromptFromForm = (programs, minManWon, maxManWon) => {
   let priceText = '';
   if (minManWon !== null && maxManWon !== null) {
@@ -189,6 +187,16 @@ const buildPromptFromForm = (programs, minManWon, maxManWon) => {
     return `${programs.join(', ')} 용도로 컴퓨터 견적 맞춰줘.`;
   }
   return `${priceText} 예산으로 컴퓨터 견적 맞춰줘.`;
+};
+
+// 프로그램·예산 문장 뒤에 자연어 요청을 붙인다. 프로그램·예산이 없으면 자연어 요청만 보낸다.
+const buildQuestion = (programs, minManWon, maxManWon, requestText) => {
+  const hasForm = programs.length > 0 || minManWon !== null || maxManWon !== null;
+  if (!hasForm) {
+    return requestText;
+  }
+  const formPrompt = buildPromptFromForm(programs, minManWon, maxManWon);
+  return requestText ? `${formPrompt} ${requestText}` : formPrompt;
 };
 
 
@@ -506,11 +514,9 @@ export default function RecommendationPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   // 질문 내역은 페이지를 나갔다 와도 남도록 저장소에 둔다
   const { entries: recentPrompts, selectedId } = useRecommendationHistory();
-  const [promptText, setPromptText] = useState(defaultPrompt);
+  const [promptText, setPromptText] = useState(''); // 자연어 추가 요청
   const isGenerating = recentPrompts.some((entry) => entry.status === 'loading');
 
-  // 'form' 간편 입력 / 'text' 자연어 입력
-  const [inputMode, setInputMode] = useState('form');
   const [programs, setPrograms] = useState([]);
   const [programInput, setProgramInput] = useState('');
   const [minPrice, setMinPrice] = useState(''); // 만원 단위 숫자 문자열
@@ -565,24 +571,7 @@ export default function RecommendationPage() {
   const isPresetActive = (preset) =>
     toManWon(minPrice) === preset.min && toManWon(maxPrice) === preset.max;
 
-  // conditions: 간편 입력의 원래 값. NL2SQL 키워드 형식과 같다: programs, price { min, max } (원 단위)
-  const submitPrompt = (trimmedPrompt, conditions = null) => {
-    if (!trimmedPrompt || isGenerating) {
-      return;
-    }
-    submitQuestion(trimmedPrompt, conditions);
-  };
-
-  const handleSubmitText = () => {
-    const trimmedPrompt = promptText.trim();
-    if (!trimmedPrompt || isGenerating) {
-      return;
-    }
-    submitPrompt(trimmedPrompt);
-    setPromptText('');
-  };
-
-  const handleSubmitForm = () => {
+  const handleSubmit = () => {
     if (isGenerating) {
       return;
     }
@@ -595,9 +584,11 @@ export default function RecommendationPage() {
         : programs;
     const minManWon = toManWon(minPrice);
     const maxManWon = toManWon(maxPrice);
+    const requestText = promptText.trim();
+    const hasForm = allPrograms.length > 0 || minManWon !== null || maxManWon !== null;
 
-    if (allPrograms.length === 0 && minManWon === null && maxManWon === null) {
-      setFormError('사용할 프로그램이나 예산 중 하나는 입력해 주세요.');
+    if (!hasForm && !requestText) {
+      setFormError('사용할 프로그램, 예산, 요청사항 중 하나는 입력해 주세요.');
       return;
     }
     if (minManWon !== null && maxManWon !== null && minManWon > maxManWon) {
@@ -607,14 +598,30 @@ export default function RecommendationPage() {
 
     setPrograms(allPrograms);
     setProgramInput('');
+    setPromptText('');
     setFormError('');
-    submitPrompt(buildPromptFromForm(allPrograms, minManWon, maxManWon), {
-      programs: allPrograms,
-      price: {
-        min: minManWon === null ? null : minManWon * MAN_WON,
-        max: maxManWon === null ? null : maxManWon * MAN_WON,
-      },
-    });
+    // conditions: 프로그램·예산의 원래 값. NL2SQL 키워드 형식과 같다: programs, price { min, max } (원 단위)
+    // 자연어 요청만 있으면 null 을 보내 nl2sql 이 문장에서 직접 추측하게 한다.
+    submitQuestion(
+      buildQuestion(allPrograms, minManWon, maxManWon, requestText),
+      hasForm
+        ? {
+            programs: allPrograms,
+            price: {
+              min: minManWon === null ? null : minManWon * MAN_WON,
+              max: maxManWon === null ? null : maxManWon * MAN_WON,
+            },
+          }
+        : null,
+    );
+  };
+
+  // 요청사항 칸에서 Ctrl(⌘)+Enter 로 바로 보낸다
+  const handleRequestKeyDown = (event) => {
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !event.nativeEvent.isComposing) {
+      event.preventDefault();
+      handleSubmit();
+    }
   };
 
   useEffect(() => {
@@ -696,177 +703,143 @@ export default function RecommendationPage() {
           >
             <div className="recommendation-page__hero">
               <div className="recommendation-page__hero-badge">AI 추천</div>
-              {inputMode === 'form' ? (
-                <>
-                  <h1>사용할 프로그램과 예산을 알려주세요.</h1>
-                  <p>프로그램과 예산 중 하나만 입력해도 견적을 맞춰드려요.</p>
-                </>
-              ) : (
-                <>
-                  <h1>필요한 조건과 서비스를 자연어로 입력해보세요.</h1>
-                  <p>
-                   " 예시: 300만원 안팎의 예산으로 컴퓨터 견적 맞춰줘. "
-                  </p>
-                </>
-              )}
+              <h1>사용할 프로그램과 예산을 알려주세요.</h1>
+              <p>원하는 조건은 아래에 자연어로 덧붙일 수 있어요. 셋 중 하나만 입력해도 견적을 맞춰드려요.</p>
 
-              <div className="recommendation-page__mode-tabs" role="tablist" aria-label="입력 방식">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={inputMode === 'form'}
-                  className={`recommendation-page__mode-tab ${inputMode === 'form' ? 'is-active' : ''}`}
-                  onClick={() => setInputMode('form')}
-                >
-                  간편 입력
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={inputMode === 'text'}
-                  className={`recommendation-page__mode-tab ${inputMode === 'text' ? 'is-active' : ''}`}
-                  onClick={() => setInputMode('text')}
-                >
-                  자연어 입력
-                </button>
-              </div>
+              <div className="recommendation-page__prompt-box recommendation-page__form">
+                <div className="recommendation-page__field">
+                  <label className="recommendation-page__field-label" htmlFor="program-input">
+                    사용할 프로그램
+                    <span className="recommendation-page__field-hint">
+                      Enter로 추가 · 최대 {MAX_PROGRAMS}개
+                    </span>
+                  </label>
 
-              {inputMode === 'form' ? (
-                <div className="recommendation-page__prompt-box recommendation-page__form" role="tabpanel">
-                  <div className="recommendation-page__field">
-                    <label className="recommendation-page__field-label" htmlFor="program-input">
-                      사용할 프로그램
-                      <span className="recommendation-page__field-hint">
-                        Enter로 추가 · 최대 {MAX_PROGRAMS}개
+                  <div className="recommendation-page__chip-input">
+                    {programs.map((program) => (
+                      <span key={program} className="recommendation-page__chip">
+                        {program}
+                        <button
+                          type="button"
+                          className="recommendation-page__chip-remove"
+                          onClick={() => removeProgram(program)}
+                          aria-label={`${program} 삭제`}
+                        >
+                          ×
+                        </button>
                       </span>
-                    </label>
-
-                    <div className="recommendation-page__chip-input">
-                      {programs.map((program) => (
-                        <span key={program} className="recommendation-page__chip">
-                          {program}
-                          <button
-                            type="button"
-                            className="recommendation-page__chip-remove"
-                            onClick={() => removeProgram(program)}
-                            aria-label={`${program} 삭제`}
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                      <input
-                        id="program-input"
-                        className="recommendation-page__chip-text"
-                        value={programInput}
-                        onChange={(event) => setProgramInput(event.target.value)}
-                        onKeyDown={handleProgramKeyDown}
-                        placeholder={programs.length === 0 ? '예: 배틀그라운드, 프리미어 프로' : ''}
-                        maxLength={30}
-                      />
-                    </div>
-
-                    <div className="recommendation-page__suggestions">
-                      {programSuggestions
-                        .filter((name) => !programs.includes(name))
-                        .map((name) => (
-                          <button
-                            key={name}
-                            type="button"
-                            className="recommendation-page__suggestion"
-                            onClick={() => addProgram(name)}
-                          >
-                            + {name}
-                          </button>
-                        ))}
-                    </div>
+                    ))}
+                    <input
+                      id="program-input"
+                      className="recommendation-page__chip-text"
+                      value={programInput}
+                      onChange={(event) => setProgramInput(event.target.value)}
+                      onKeyDown={handleProgramKeyDown}
+                      placeholder={programs.length === 0 ? '예: 배틀그라운드, 프리미어 프로' : ''}
+                      maxLength={30}
+                    />
                   </div>
 
-                  <div className="recommendation-page__field">
-                    <label className="recommendation-page__field-label" htmlFor="min-price">
-                      예산
-                      <span className="recommendation-page__field-hint">만원 단위 · 한쪽만 입력해도 돼요</span>
-                    </label>
-
-                    <div className="recommendation-page__price-range">
-                      <div className="recommendation-page__price-input">
-                        <input
-                          id="min-price"
-                          inputMode="numeric"
-                          value={minPrice}
-                          onChange={handlePriceChange(setMinPrice)}
-                          placeholder="최소"
-                          aria-label="최소 예산 (만원)"
-                        />
-                        <span>만원</span>
-                      </div>
-                      <span className="recommendation-page__price-separator">~</span>
-                      <div className="recommendation-page__price-input">
-                        <input
-                          inputMode="numeric"
-                          value={maxPrice}
-                          onChange={handlePriceChange(setMaxPrice)}
-                          placeholder="최대"
-                          aria-label="최대 예산 (만원)"
-                        />
-                        <span>만원</span>
-                      </div>
-                    </div>
-
-                    <div className="recommendation-page__suggestions">
-                      {pricePresets.map((preset) => (
+                  <div className="recommendation-page__suggestions">
+                    {programSuggestions
+                      .filter((name) => !programs.includes(name))
+                      .map((name) => (
                         <button
-                          key={preset.label}
+                          key={name}
                           type="button"
-                          className={`recommendation-page__suggestion ${
-                            isPresetActive(preset) ? 'is-active' : ''
-                          }`}
-                          onClick={() => applyPricePreset(preset)}
+                          className="recommendation-page__suggestion"
+                          onClick={() => addProgram(name)}
                         >
-                          {preset.label}
+                          + {name}
                         </button>
                       ))}
-                    </div>
-                  </div>
-
-                  {formError ? (
-                    <div className="recommendation-page__form-error" role="alert">
-                      {formError}
-                    </div>
-                  ) : null}
-
-                  <div className="recommendation-page__prompt-actions">
-                    <button
-                      type="button"
-                      className="recommendation-page__primary-button"
-                      onClick={handleSubmitForm}
-                      disabled={isGenerating}
-                    >
-                      AI 추천 분석
-                    </button>
                   </div>
                 </div>
-              ) : (
-                <div className="recommendation-page__prompt-box" role="tabpanel">
+
+                <div className="recommendation-page__field">
+                  <label className="recommendation-page__field-label" htmlFor="min-price">
+                    예산
+                    <span className="recommendation-page__field-hint">만원 단위 · 한쪽만 입력해도 돼요</span>
+                  </label>
+
+                  <div className="recommendation-page__price-range">
+                    <div className="recommendation-page__price-input">
+                      <input
+                        id="min-price"
+                        inputMode="numeric"
+                        value={minPrice}
+                        onChange={handlePriceChange(setMinPrice)}
+                        placeholder="최소"
+                        aria-label="최소 예산 (만원)"
+                      />
+                      <span>만원</span>
+                    </div>
+                    <span className="recommendation-page__price-separator">~</span>
+                    <div className="recommendation-page__price-input">
+                      <input
+                        inputMode="numeric"
+                        value={maxPrice}
+                        onChange={handlePriceChange(setMaxPrice)}
+                        placeholder="최대"
+                        aria-label="최대 예산 (만원)"
+                      />
+                      <span>만원</span>
+                    </div>
+                  </div>
+
+                  <div className="recommendation-page__suggestions">
+                    {pricePresets.map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        className={`recommendation-page__suggestion ${
+                          isPresetActive(preset) ? 'is-active' : ''
+                        }`}
+                        onClick={() => applyPricePreset(preset)}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="recommendation-page__field">
+                  <label className="recommendation-page__field-label" htmlFor="request-input">
+                    추가 요청사항
+                    <span className="recommendation-page__field-hint">자연어로 자유롭게 · 선택 · Ctrl+Enter로 보내기</span>
+                  </label>
+
                   <textarea
+                    id="request-input"
                     className="recommendation-page__chat-input"
                     value={promptText}
-                    onChange={(event) => setPromptText(event.target.value)}
-                    rows={5}
+                    onChange={(event) => {
+                      setPromptText(event.target.value);
+                      setFormError('');
+                    }}
+                    onKeyDown={handleRequestKeyDown}
+                    placeholder={requestPlaceholder}
+                    rows={3}
                   />
-
-                  <div className="recommendation-page__prompt-actions">
-                    <button
-                      type="button"
-                      className="recommendation-page__primary-button"
-                      onClick={handleSubmitText}
-                      disabled={isGenerating}
-                    >
-                      AI 추천 분석
-                    </button>
-                  </div>
                 </div>
-              )}
+
+                {formError ? (
+                  <div className="recommendation-page__form-error" role="alert">
+                    {formError}
+                  </div>
+                ) : null}
+
+                <div className="recommendation-page__prompt-actions">
+                  <button
+                    type="button"
+                    className="recommendation-page__primary-button"
+                    onClick={handleSubmit}
+                    disabled={isGenerating}
+                  >
+                    AI 추천 분석
+                  </button>
+                </div>
+              </div>
 
               {selectedPrompt?.status === 'loading' ? (
                 <div className="recommendation-page__loading-card">
