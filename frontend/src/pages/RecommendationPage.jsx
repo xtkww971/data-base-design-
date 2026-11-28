@@ -7,9 +7,13 @@ import { addToCart, useCartItems } from '../cart/cartStore.js';
 import { DUMMY_IMAGES } from '../assets/dummyImages.js';
 import { fetchProductDetail } from '../api/productApi.js';
 import { getSpecEntries } from '../utils/productSpecs.js';
+import { useCurrentUser } from '../auth/authStore.js';
 import {
   deleteEntry,
+  refreshHistory,
+  retryDetail,
   selectEntry,
+  setHistoryUser,
   submitQuestion,
   useRecommendationHistory,
 } from '../recommendation/historyStore.js';
@@ -270,6 +274,41 @@ const groupResultByCategory = (result) => {
 
 const INITIAL_CARD_COUNT = 6;
 
+// 사이드바 항목의 결과 표시. 성공은 표시하지 않고, 실패는 Nl2sqlErrorCard 와 같은 톤을 쓴다.
+const OUTCOME_BADGES = {
+  UNANSWERABLE: { tone: 'info', label: '안내' },
+  GENERATION_FAILED: { tone: 'caution', label: '다시 입력' },
+  EXECUTION_FAILED: { tone: 'error', label: '조회 실패' },
+};
+
+function outcomeBadge(entry) {
+  if (entry.status === 'loading') return { tone: 'progress', label: '분석 중' };
+  if (OUTCOME_BADGES[entry.outcome]) return OUTCOME_BADGES[entry.outcome];
+  if (entry.status === 'error' && entry.outcome == null) return { tone: 'error', label: '오류' };
+  return null;
+}
+
+// 질문 내역 목록 위·아래에 보여 줄 안내. 목록이 있으면 null.
+function HistoryNotice({ listStatus, listError, isEmpty }) {
+  if (listStatus === 'loading' && isEmpty) {
+    return <p className="recommendation-page__history-message">질문 내역을 불러오는 중…</p>;
+  }
+  if (listStatus === 'error') {
+    return (
+      <div className="recommendation-page__history-message is-error" role="alert">
+        <p>{listError ?? '질문 내역을 불러오지 못했습니다.'}</p>
+        <button type="button" className="recommendation-page__history-retry" onClick={() => refreshHistory()}>
+          다시 시도
+        </button>
+      </div>
+    );
+  }
+  if (isEmpty) {
+    return <p className="recommendation-page__history-message">아직 질문 내역이 없어요.</p>;
+  }
+  return null;
+}
+
 function CartButton({ row, cartIds }) {
   if (!canAddToCart(row)) {
     return null;
@@ -513,8 +552,16 @@ function ResultTable({ result }) {
 
 export default function RecommendationPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  // 질문 내역은 페이지를 나갔다 와도 남도록 저장소에 둔다
-  const { entries: recentPrompts, selectedId } = useRecommendationHistory();
+  // 질문 내역은 페이지를 나갔다 와도 남도록 저장소에 둔다. 로그인하면 서버(nl_queries)에서 읽는다.
+  const currentUser = useCurrentUser();
+  const currentUserId = currentUser?.userId ?? null;
+  const {
+    entries: recentPrompts,
+    selectedId,
+    listStatus,
+    listError,
+    notice,
+  } = useRecommendationHistory();
   const [promptText, setPromptText] = useState(''); // 자연어 추가 요청
   const isGenerating = recentPrompts.some((entry) => entry.status === 'loading');
 
@@ -626,6 +673,10 @@ export default function RecommendationPage() {
   };
 
   useEffect(() => {
+    setHistoryUser(currentUserId);
+  }, [currentUserId]);
+
+  useEffect(() => {
     function handleResize() {
       setIsSidebarOpen(window.innerWidth > SIDEBAR_BREAKPOINT);
     }
@@ -662,8 +713,31 @@ export default function RecommendationPage() {
             </div>
 
             <div className="recommendation-page__sidebar-body">
+              {currentUserId === null ? (
+                <p className="recommendation-page__history-hint">
+                  <Link to="/login" state={{ from: '/recommendation' }}>
+                    로그인
+                  </Link>
+                  하면 질문 내역이 계정에 저장돼 다른 기기에서도 볼 수 있어요.
+                </p>
+              ) : null}
+
+              {notice ? (
+                <p className="recommendation-page__history-message is-error" role="alert">
+                  {notice}
+                </p>
+              ) : null}
+
+              <HistoryNotice
+                listStatus={listStatus}
+                listError={listError}
+                isEmpty={recentPrompts.length === 0}
+              />
+
               <ul className="recommendation-page__recent-list">
-                {recentPrompts.map((item) => (
+                {recentPrompts.map((item) => {
+                  const badge = outcomeBadge(item);
+                  return (
                   <li key={item.id}>
                     <div
                       className={`recommendation-page__recent-item-wrapper ${
@@ -675,7 +749,14 @@ export default function RecommendationPage() {
                         className="recommendation-page__recent-item"
                         onClick={() => selectEntry(item.id)}
                       >
-                        <span className="recommendation-page__recent-date">{item.date}</span>
+                        <span className="recommendation-page__recent-meta">
+                          <span className="recommendation-page__recent-date">{item.date}</span>
+                          {badge ? (
+                            <span className={`recommendation-page__recent-badge is-${badge.tone}`}>
+                              {badge.label}
+                            </span>
+                          ) : null}
+                        </span>
                         <p>{item.prompt}</p>
                       </button>
 
@@ -692,7 +773,8 @@ export default function RecommendationPage() {
                       </button>
                     </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </div>
           </aside>
@@ -849,6 +931,25 @@ export default function RecommendationPage() {
                     AI가 분석 중입니다. 잠시만 기다려주세요!
                   </div>
                 </div>
+              ) : selectedPrompt?.status === 'stub' ? (
+                selectedPrompt.detailStatus === 'error' ? (
+                  <div className="recommendation-page__analysis-card recommendation-page__analysis-card--full recommendation-page__selected-panel">
+                    <div className="recommendation-page__analysis-title">AI 분석 결과</div>
+                    <Nl2sqlErrorCard message={selectedPrompt.error} errorCode={selectedPrompt.errorCode} />
+                    <button
+                      type="button"
+                      className="recommendation-page__history-retry"
+                      onClick={() => retryDetail(selectedPrompt.id)}
+                    >
+                      결과 다시 불러오기
+                    </button>
+                  </div>
+                ) : (
+                  <div className="recommendation-page__loading-card">
+                    <div className="recommendation-page__loading-spinner" aria-hidden="true" />
+                    <div className="recommendation-page__loading-text">이전 결과를 불러오는 중입니다.</div>
+                  </div>
+                )
               ) : selectedPrompt ? (
                 <div className="recommendation-page__analysis-card recommendation-page__analysis-card--full recommendation-page__selected-panel">
                   <div className="recommendation-page__analysis-title">AI 분석 결과</div>
@@ -856,7 +957,7 @@ export default function RecommendationPage() {
                   <div className="recommendation-page__selected-summary">
                     <span className="recommendation-page__selected-date">{selectedPrompt.date}</span>
                     <p>{selectedPrompt.prompt}</p>
-                    {selectedPrompt.conditions ? (
+                    {selectedPrompt.conditions?.programs ? (
                       <div className="recommendation-page__condition-chips">
                         {selectedPrompt.conditions.programs.map((program) => (
                           <span key={program} className="recommendation-page__chip">

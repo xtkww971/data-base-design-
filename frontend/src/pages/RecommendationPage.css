@@ -179,6 +179,111 @@
   font-size: 0.86rem;
 }
 
+.recommendation-page__recent-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.recommendation-page__recent-meta .recommendation-page__recent-date {
+  margin-bottom: 0;
+}
+
+/* 사이드바 항목의 결과 표시. 톤은 Nl2sqlErrorCard 와 같다 */
+.recommendation-page__recent-badge {
+  --tone-rgb: 148, 163, 184;
+  --tone-fg: #cbd5e1;
+
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--tone-fg);
+  background: rgba(var(--tone-rgb), 0.12);
+  border: 1px solid rgba(var(--tone-rgb), 0.3);
+}
+
+.recommendation-page__recent-badge.is-info {
+  --tone-rgb: 56, 189, 248;
+  --tone-fg: #7dd3fc;
+}
+
+.recommendation-page__recent-badge.is-caution {
+  --tone-rgb: 245, 158, 11;
+  --tone-fg: #fbbf24;
+}
+
+.recommendation-page__recent-badge.is-error {
+  --tone-rgb: 239, 68, 68;
+  --tone-fg: #fca5a5;
+}
+
+.recommendation-page__recent-badge.is-progress {
+  --tone-rgb: 167, 139, 250;
+  --tone-fg: #c4b5fd;
+}
+
+.recommendation-page__history-hint {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: rgba(226, 232, 240, 0.72);
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.recommendation-page__history-hint a {
+  color: #93c5fd;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.recommendation-page__history-message {
+  margin: 0 0 12px;
+  padding: 14px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  text-align: center;
+  color: rgba(226, 232, 240, 0.6);
+  border: 1px dashed rgba(148, 163, 184, 0.24);
+}
+
+.recommendation-page__history-message p {
+  margin: 0 0 10px;
+}
+
+.recommendation-page__history-message.is-error {
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.07);
+}
+
+.recommendation-page__history-retry {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  cursor: pointer;
+}
+
+.recommendation-page__history-retry:hover {
+  border-color: rgba(96, 165, 250, 0.5);
+}
+
+.recommendation-page__selected-panel > .recommendation-page__history-retry {
+  align-self: flex-start;
+  margin-top: 12px;
+}
+
 /* 본문은 절대 밀리지 않음: 사이드바가 겹쳐서 보이기만 함 */
 .recommendation-page__main-column {
   flex: 1;
