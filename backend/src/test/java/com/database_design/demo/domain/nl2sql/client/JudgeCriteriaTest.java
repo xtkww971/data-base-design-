@@ -26,7 +26,8 @@ class JudgeCriteriaTest {
 
     private static TypeSafeProperties propertiesWith(String location) {
         return new TypeSafeProperties("key", "https://api.typesafe.ai", "jev-1.14.0",
-                Duration.ofSeconds(1), Duration.ofSeconds(1), 0.7, location);
+                Duration.ofSeconds(1), Duration.ofSeconds(1), 0.7, location,
+                "classpath:nl2sql/schema-summary.txt");
     }
 
     private static JudgeCriteria load(String location) {

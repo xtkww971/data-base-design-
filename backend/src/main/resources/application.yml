@@ -34,6 +34,8 @@ typesafe:
   confidence-threshold: 0.7
   # 판정 기준. PoC 때 file:./criteria-v2.yml 처럼 바꿔 끼울 수 있다.
   criteria-location: ${TYPESAFE_CRITERIA_LOCATION:classpath:nl2sql/judge-criteria.yml}
+  # 판정 근거로 보낼 스키마 요약. schema_docs.json 이 바뀌면 같이 고쳐야 한다.
+  schema-location: ${TYPESAFE_SCHEMA_LOCATION:classpath:nl2sql/schema-summary.txt}
 
 management:
   endpoints:
