@@ -3,7 +3,12 @@ package com.database_design.demo.domain.nl2sql.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -14,11 +19,13 @@ import com.database_design.demo.domain.nl2sql.client.Nl2SqlClient.GeneratedQuery
 import com.database_design.demo.domain.nl2sql.dto.JudgeResult;
 import com.database_design.demo.domain.nl2sql.dto.NlQueryRequest;
 import com.database_design.demo.domain.nl2sql.dto.Verdict;
+import com.database_design.demo.domain.nl2sql.entity.NlQueryStatus;
 import com.database_design.demo.global.config.TypeSafeProperties;
 import com.database_design.demo.global.error.BusinessException;
 import com.database_design.demo.global.error.ErrorCode;
 import java.time.Duration;
 import javax.sql.DataSource;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,8 +45,11 @@ class Nl2SqlServiceTest {
     private final AnswerabilityJudgeClient judgeClient = mock(AnswerabilityJudgeClient.class);
     private final Nl2SqlClient nl2SqlClient = mock(Nl2SqlClient.class);
 
+    private final NlQueryRecorder recorder = mock(NlQueryRecorder.class);
+
     private final Nl2SqlService service = new Nl2SqlService(
-            judgeClient, nl2SqlClient, properties(), mock(DataSource.class));
+            judgeClient, nl2SqlClient, properties(), recorder, mock(DataSource.class),
+            mock(PlatformTransactionManager.class));
 
     private static TypeSafeProperties properties() {
         return new TypeSafeProperties("key", "https://api.typesafe.ai", "jev-1.14.0",
@@ -160,5 +170,69 @@ class Nl2SqlServiceTest {
                 .isEqualTo(ErrorCode.NL2SQL_GENERATION_FAILED);
 
         verify(nl2SqlClient).generate(any());
+    }
+
+    @Test
+    @DisplayName("거절한 질문은 판정과 함께 UNANSWERABLE 로 남긴다")
+    void recordsRejectedQuestion() {
+        JudgeResult judged = JudgeResult.of(Verdict.OUT_OF_SCOPE, 0.9);
+        when(judgeClient.judge(any())).thenReturn(judged);
+        NlQueryRequest request = new NlQueryRequest("오늘 날씨 어때?", null, null, null, 7L);
+
+        assertThatThrownBy(() -> service.query(request)).isInstanceOf(BusinessException.class);
+
+        verify(recorder).recordFailure(eq(7L), eq("오늘 날씨 어때?"), eq(judged), eq(NlQueryStatus.UNANSWERABLE),
+                isNull(), eq(0), eq("NL2SQL_OUT_OF_SCOPE"), anyInt());
+    }
+
+    @Test
+    @DisplayName("SQL 생성에 실패한 질문은 GENERATION_FAILED 로 남긴다")
+    void recordsGenerationFailure() {
+        when(judgeClient.judge(any())).thenReturn(JudgeResult.notJudged());
+        givenGenerationFails();
+
+        assertThatThrownBy(() -> service.query(new NlQueryRequest("질문")))
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.NL2SQL_GENERATION_FAILED);
+
+        verify(recorder).recordFailure(isNull(), eq("질문"), any(), eq(NlQueryStatus.GENERATION_FAILED),
+                isNull(), eq(3), eq("생성 불가"), anyInt());
+    }
+
+    @Test
+    @DisplayName("nl2sql 서버에 연결하지 못한 질문은 남기지 않는다")
+    void doesNotRecordWhenNl2SqlUnavailable() {
+        when(judgeClient.judge(any())).thenReturn(JudgeResult.notJudged());
+        when(nl2SqlClient.generate(any())).thenThrow(new BusinessException(ErrorCode.NL2SQL_UNAVAILABLE));
+
+        assertThatThrownBy(() -> service.query(new NlQueryRequest("질문")))
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.NL2SQL_UNAVAILABLE);
+
+        verify(recorder, never()).recordFailure(any(), any(), any(), any(), any(), anyInt(), any(), anyInt());
+    }
+
+    @Test
+    @DisplayName("기록에 실패해도 사용자에게는 원래 에러를 돌려준다")
+    void recordingFailureDoesNotChangeResponse() {
+        when(judgeClient.judge(any())).thenReturn(JudgeResult.of(Verdict.AMBIGUOUS, 0.9));
+        when(recorder.recordFailure(any(), any(), any(), any(), any(), anyInt(), any(), anyInt()))
+                .thenThrow(new IllegalStateException("DB down"));
+
+        assertThatThrownBy(() -> service.query(new NlQueryRequest("좋은 거")))
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.NL2SQL_AMBIGUOUS);
+    }
+
+    @Test
+    @DisplayName("없는 유저면 판정·생성 전에 끊는다")
+    void rejectsUnknownUserBeforeCallingLlm() {
+        doThrow(new BusinessException(ErrorCode.USER_NOT_FOUND)).when(recorder).requireUser(99L);
+
+        assertThatThrownBy(() -> service.query(new NlQueryRequest("질문", null, null, null, 99L)))
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+
+        verifyNoInteractions(judgeClient, nl2SqlClient);
     }
 }

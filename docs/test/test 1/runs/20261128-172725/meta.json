@@ -1,0 +1,50 @@
+{
+  "question_file": "docs\\test\\test 1\\test_1_questions.json",
+  "started_at": "2026-11-28T17:27:25",
+  "base_url": "http://localhost:8080",
+  "args": {
+    "question_file": "docs/test/test 1/test_1_questions.json",
+    "only": null,
+    "repeat": 1,
+    "delay": 3.0,
+    "base_url": "http://localhost:8080",
+    "out": null,
+    "report_only": null,
+    "skip_preflight": false
+  },
+  "git": {
+    "branch": "feat/#29-frontend-error-card",
+    "commit": "cec7a53 Merge pull request #38 from xtkww971/feat/#29-allow-recommendation",
+    "dirty": [
+      " M backend/src/main/java/com/database_design/demo/domain/nl2sql/service/Nl2SqlService.java",
+      " M backend/src/main/resources/application.yml",
+      "?? docs/test/",
+      "?? tools/nl2sql_eval.py"
+    ]
+  },
+  "backend": {
+    "health": {
+      "groups": [
+        "liveness",
+        "readiness"
+      ],
+      "status": "UP"
+    },
+    "image_created": "2026-11-28T08:27:14.222683104Z",
+    "confidence_threshold_env": "0.7",
+    "typesafe_key_present": true,
+    "criteria_location_env": null
+  },
+  "nl2sql": {
+    "running": "true",
+    "image_created": "2026-11-28T08:02:01.661384174Z",
+    "llm_model": "openai/gpt-oss-120b"
+  },
+  "file_hashes": {
+    "judge-criteria.yml": "322f639cdc41",
+    "schema-summary.txt": "54c62bc24bcd",
+    "schema_docs.json": "7464446d0218",
+    "few_shot_examples.json": "1028f63ddf16",
+    "chroma.sqlite3": "4d020d1ef70a"
+  }
+}

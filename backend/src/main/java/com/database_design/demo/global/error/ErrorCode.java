@@ -51,6 +51,7 @@ public enum ErrorCode {
     NL2SQL_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "자연어 처리 서버에 연결할 수 없습니다."),
     NL2SQL_GENERATION_FAILED(HttpStatus.UNPROCESSABLE_CONTENT, "질문을 이해하지 못했습니다. 다르게 표현해 주세요."),
     NL2SQL_EXECUTION_FAILED(HttpStatus.UNPROCESSABLE_CONTENT, "질문에 대한 결과를 조회하지 못했습니다."),
+    NL_QUERY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 질문 내역입니다."),
 
     // 자연어 질의 - 처리 가능 여부 판정(ADR 0004). 판정별로 문구가 달라 코드를 나눈다.
     // 서버 잘못이 아니고 질문이 범위 밖이므로 GENERATION_FAILED 와 같은 422 를 쓴다.
