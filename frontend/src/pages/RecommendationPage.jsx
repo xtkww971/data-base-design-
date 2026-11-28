@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
+import Nl2sqlErrorCard from './components/Nl2sqlErrorCard.jsx';
 import { addToCart, useCartItems } from '../cart/cartStore.js';
 import { DUMMY_IMAGES } from '../assets/dummyImages.js';
 import { fetchProductDetail } from '../api/productApi.js';
@@ -897,12 +898,7 @@ export default function RecommendationPage() {
                   ) : null}
 
                   {selectedPrompt.error ? (
-                    <div className="recommendation-page__result-error" role="alert">
-                      <span>{selectedPrompt.error}</span>
-                      {selectedPrompt.errorCode ? (
-                        <code className="recommendation-page__error-code">{selectedPrompt.errorCode}</code>
-                      ) : null}
-                    </div>
+                    <Nl2sqlErrorCard message={selectedPrompt.error} errorCode={selectedPrompt.errorCode} />
                   ) : null}
 
                   {selectedPrompt.result ? (
