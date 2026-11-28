@@ -21,7 +21,7 @@ flowchart TD
 |---|---|---|---|
 | 1. 권장 사양 검색 (선택) | 입력받은 프로그램의 권장 사양 검색 | 벡터 DB | `program_specs` |
 | 2. 용도 판단 (선택) | 입력받은 프로그램으로 PC 용도 판단 | LLM | `usage` |
-| 3. 스키마 검색 | 질의와 관련된 테이블 스키마 5개 검색 | 벡터 DB | `schema_info` |
+| 3. 스키마 검색 | 질의와 관련된 테이블 스키마 6개 검색 | 벡터 DB | `schema_info` |
 | 4. 예시 검색 | 비슷한 질문-SQL 예시 3개 검색 | 벡터 DB | `query_example` |
 | 5. SQL 생성 | 1~4의 결과와 질의로 SQL 작성 | LLM | `query`, `retry_count` |
 | 6. 검증 | 금지어 검사 + `EXPLAIN` 실행 | MySQL | `error` |
@@ -92,15 +92,18 @@ flowchart TD
 
 [nl2sql/src/nodes/schema_retriever.py](../nl2sql/src/nodes/schema_retriever.py) → `get_schema()`
 
-질의와 관련된 테이블 스키마 **5개**를 가져와 `schema_info`에 저장한다.
+질의와 관련된 테이블 스키마 **6개**를 가져와 `schema_info`에 저장한다.
 
 - `modules`, `categories` 2개는 질의와 관계없이 **항상 포함**한다. 제품명·제조사·가격이 `modules`에만 있기 때문이다.
-- 나머지 3개는 두 테이블을 제외하고 질의 원문과의 유사도로 검색한다.
+- 나머지 4개는 두 테이블을 제외하고 질의 원문과의 유사도로 검색한다.
 
 | 질의 | 가져오는 테이블 |
 |---|---|
-| VRAM 16GB 이상 그래픽카드 가격 | categories, modules + graphic_cards, rams, main_boards |
-| 라이젠5 7500F와 호환되는 메인보드 | categories, modules + main_boards, cpus, graphic_cards |
+| VRAM 16GB 이상 그래픽카드 가격 | categories, modules + graphic_cards, v_gpu_power_compat, rams, cpu_memory_clocks |
+| 라이젠5 7500F와 호환되는 메인보드 | categories, modules + cpus, main_boards, v_cpu_board_compat, graphic_cards |
+| 배틀그라운드 할건데 150만원 이하로 견적 맞춰줘 | categories, modules + v_build_warnings, warning_rules, build_storages, cpus |
+
+> ⚠️ 질의에 "견적"이 들어가면 저장 견적용 테이블(`builds` 계열)이 검색되고, 메인보드·램·파워 테이블과 호환 뷰가 빠진다. 이 때문에 비호환 견적이 나올 수 있다. → [troubleshooting/nl2sql-incompatible-build.md](troubleshooting/nl2sql-incompatible-build.md)
 
 ### 4. 예시 검색 — example_retriever
 
