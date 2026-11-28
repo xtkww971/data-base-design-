@@ -820,16 +820,6 @@
   word-break: break-all;
 }
 
-.recommendation-page__result-error {
-  margin-top: 18px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.28);
-  color: #fecaca;
-  font-size: 0.9rem;
-}
-
 .recommendation-page__condition-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1005,30 +995,6 @@
   font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: 0.04em;
-}
-
-.recommendation-page__result-error {
-  margin: 20px 0 0;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(248, 113, 113, 0.3);
-  color: #fecaca;
-  font-size: 0.88rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-}
-
-.recommendation-page__error-code {
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: rgba(239, 68, 68, 0.14);
-  border: 1px solid rgba(248, 113, 113, 0.35);
-  color: #fca5a5;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 0.75rem;
 }
 
 .recommendation-page__result {
