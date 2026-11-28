@@ -175,7 +175,7 @@
   },
   {
     "table": "warning_rules",
-    "description": "견적 경고 규칙의 벌점과 안내 문구. 경고 뷰(v_cpu_board_warnings, v_cpu_ram_warnings, v_build_warnings)의 warning_code 와 조인해 사용. 벌점 합이 낮을수록 좋은 조합. W1=램 클럭이 CPU 공식 지원보다 높음(벌점 0), W2=램 4개 장착 시 지원 클럭 저하(20), W3=램 1개라 싱글 채널(30), W4=오버클럭 CPU 인데 보드가 오버클럭 미지원(20), W5=CPU TDP 가 칩셋 상정치 초과(20)",
+    "description": "부품 조합 경고 규칙의 벌점과 안내 문구. 경고 뷰(v_cpu_board_warnings, v_cpu_ram_warnings, v_build_warnings)의 warning_code 와 조인해 사용. 벌점 합이 낮을수록 좋은 조합. W1=램 클럭이 CPU 공식 지원보다 높음(벌점 0), W2=램 4개 장착 시 지원 클럭 저하(20), W3=램 1개라 싱글 채널(30), W4=오버클럭 CPU 인데 보드가 오버클럭 미지원(20), W5=CPU TDP 가 칩셋 상정치 초과(20)",
     "columns": [
       {"name": "warning_code", "type": "TEXT", "description": "경고 코드, PK (W1, W2, W3, W4, W5)"},
       {"name": "penalty", "type": "INTEGER", "description": "벌점. 0 이면 안내만 하고 정렬에는 영향 없음"},
@@ -185,7 +185,7 @@
   },
   {
     "table": "v_cpu_board_compat",
-    "description": "뷰. 소켓이 같아 호환되는 CPU × 메인보드 쌍만 담는다. 'CPU 에 맞는 보드', '호환되는 메인보드' 질문에 사용",
+    "description": "뷰. 소켓이 같아 호환되는 CPU × 메인보드 쌍만 담는다. PC 견적을 추천하거나 맞출 때 고른 CPU 에 맞는 메인보드를 이 뷰로 고른다. 'CPU 에 맞는 보드', '호환되는 메인보드' 질문에도 사용",
     "columns": [
       {"name": "cpu_id", "type": "INTEGER", "description": "CPU 부품 번호, cpus.module_id"},
       {"name": "board_id", "type": "INTEGER", "description": "메인보드 부품 번호, main_boards.module_id"}
@@ -193,7 +193,7 @@
   },
   {
     "table": "v_ram_board_compat",
-    "description": "뷰. 메모리 규격이 같고 키트 하나가 보드 슬롯 수·최대 용량 안에 들어가는 램 × 메인보드 쌍. '보드에 맞는 램' 질문에 사용",
+    "description": "뷰. 메모리 규격이 같고 키트 하나가 보드 슬롯 수·최대 용량 안에 들어가는 램 × 메인보드 쌍. PC 견적을 추천하거나 맞출 때 고른 메인보드에 맞는 램을 이 뷰로 고른다. '보드에 맞는 램' 질문에도 사용",
     "columns": [
       {"name": "ram_id", "type": "INTEGER", "description": "램 부품 번호, rams.module_id"},
       {"name": "board_id", "type": "INTEGER", "description": "메인보드 부품 번호, main_boards.module_id"},
@@ -210,7 +210,7 @@
   },
   {
     "table": "v_gpu_power_compat",
-    "description": "뷰. 파워 정격 출력이 그래픽카드 권장 파워 이상이고 보조전원 커넥터(8핀 개수 또는 16핀)가 맞는 그래픽카드 × 파워 쌍. '그래픽카드에 맞는 파워' 질문에 사용",
+    "description": "뷰. 파워 정격 출력이 그래픽카드 권장 파워 이상이고 보조전원 커넥터(8핀 개수 또는 16핀)가 맞는 그래픽카드 × 파워 쌍. PC 견적을 추천하거나 맞출 때 고른 그래픽카드에 맞는 파워를 이 뷰로 고른다. '그래픽카드에 맞는 파워' 질문에도 사용",
     "columns": [
       {"name": "gpu_id", "type": "INTEGER", "description": "그래픽카드 부품 번호, graphic_cards.module_id"},
       {"name": "power_id", "type": "INTEGER", "description": "파워 부품 번호, power.module_id"}
@@ -236,12 +236,12 @@
   },
   {
     "table": "builds",
-    "description": "유저가 저장한 PC 견적. 부품 칸마다 id 와 호환 비교용 스펙 복사본을 둔다. 부품 이름·가격은 각 *_id 로 modules 와 조인해 얻는다. 저장장치는 build_storages 에 있다",
+    "description": "사용자가 마이페이지에 저장해 둔 PC 부품 구성 목록. '내가 저장한 구성' 조회에 사용. 칸마다 부품 id 와 호환 비교용 스펙 복사본을 둔다. 부품 이름·가격은 각 *_id 로 modules 와 조인해 얻는다. 저장장치는 build_storages 에 있다",
     "columns": [
-      {"name": "build_id", "type": "INTEGER", "description": "견적 번호, PK"},
+      {"name": "build_id", "type": "INTEGER", "description": "저장 구성 번호, PK"},
       {"name": "user_id", "type": "INTEGER", "description": "작성자, users.user_id 참조"},
-      {"name": "title", "type": "TEXT", "description": "견적 제목"},
-      {"name": "status", "type": "TEXT", "description": "DRAFT(작성 중, 빈 칸 허용) 또는 COMPLETE(필수 부품이 모두 찬 완성 견적)"},
+      {"name": "title", "type": "TEXT", "description": "저장 구성 이름"},
+      {"name": "status", "type": "TEXT", "description": "DRAFT(작성 중, 빈 칸 허용) 또는 COMPLETE(필수 부품이 모두 찬 완성 구성)"},
       {"name": "cpu_id", "type": "INTEGER", "description": "CPU 부품 번호, cpus.module_id. 비어 있으면 NULL"},
       {"name": "board_id", "type": "INTEGER", "description": "메인보드 부품 번호, main_boards.module_id"},
       {"name": "ram_id", "type": "INTEGER", "description": "램 부품 번호, rams.module_id"},
@@ -249,23 +249,23 @@
       {"name": "gpu_id", "type": "INTEGER", "description": "그래픽카드 부품 번호, graphic_cards.module_id. 내장 그래픽 사용 시 NULL"},
       {"name": "power_id", "type": "INTEGER", "description": "파워 부품 번호, power.module_id"},
       {"name": "cpu_socket, cpu_has_graphics, board_socket, board_memory_spec, board_memory_slots, board_max_memory_gb, board_has_video_output, ram_memory_spec, ram_package_count, ram_capacity, gpu_recommended_power, gpu_uses_16pin, gpu_pcie_8pin_count, power_rated_power, power_has_16pin, power_pcie_8pin_count", "type": "MIXED", "description": "각 부품 원본 스펙의 복사본. 원본 테이블 값과 항상 같으므로 조회 시에는 원본 테이블과 조인해도 된다"},
-      {"name": "created_at", "type": "DATETIME", "description": "견적 저장 시각"}
+      {"name": "created_at", "type": "DATETIME", "description": "저장 시각"}
     ]
   },
   {
     "table": "build_storages",
-    "description": "견적에 담긴 저장장치(SSD, HDD). 견적 하나에 여러 개 가능",
+    "description": "저장해 둔 구성(builds)에 담긴 저장장치(SSD, HDD). 구성 하나에 여러 개 가능",
     "columns": [
-      {"name": "build_id", "type": "INTEGER", "description": "견적 번호, builds.build_id 참조. PK (build_id, module_id)"},
+      {"name": "build_id", "type": "INTEGER", "description": "저장 구성 번호, builds.build_id 참조. PK (build_id, module_id)"},
       {"name": "module_id", "type": "INTEGER", "description": "저장장치 부품 번호, modules.module_id 참조"},
       {"name": "quantity", "type": "INTEGER", "description": "수량 (1 이상)"}
     ]
   },
   {
     "table": "v_build_warnings",
-    "description": "뷰. 저장된 견적(builds)의 경고 목록. 램 수량까지 반영해 W1~W5 를 판정. warning_rules 와 조인해 벌점·문구를 얻는다",
+    "description": "뷰. 저장해 둔 구성(builds)의 경고 목록. 램 수량까지 반영해 W1~W5 를 판정. warning_rules 와 조인해 벌점·문구를 얻는다",
     "columns": [
-      {"name": "build_id", "type": "INTEGER", "description": "견적 번호, builds.build_id"},
+      {"name": "build_id", "type": "INTEGER", "description": "저장 구성 번호, builds.build_id"},
       {"name": "warning_code", "type": "TEXT", "description": "경고 코드 (W1~W5), warning_rules.warning_code"}
     ]
   }
