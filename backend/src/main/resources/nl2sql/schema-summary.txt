@@ -1,0 +1,50 @@
+PC 부품 쇼핑몰 데이터베이스. SQL 조회 한 번으로 답할 수 있는 범위는 아래가 전부다.
+
+[부품 공통]
+categories: 부품 카테고리. CPU, MAINBOARD, RAM, GPU, POWER, SSD, HDD, MONITOR 8종만 있다.
+modules: 부품 공통 정보. 제품명(name), 제조사(brand), 가격(price, 원 단위), 성능 점수(performance_score), 이미지 URL.
+  제품명·제조사·가격은 이 테이블에만 있다. performance_score 는 같은 카테고리 안에서만 비교할 수 있다.
+
+[부품별 상세]
+cpus: 소켓, 코어 수, 스레드 수, 내장그래픽 유무, 기본 클럭, TDP(W), 오버클럭 가능 여부.
+main_boards: 소켓, 폼팩터(ATX/M-ATX/Mini-ITX/E-ATX), 메모리 규격, 메모리 슬롯 수, 최대 메모리 용량, 영상 출력 유무, 칩셋.
+rams: 메모리 규격(DDR4/DDR5), 키트 전체 용량(GB), 동작 클럭(MT/s), 키트 구성 개수.
+graphic_cards: 칩셋 그룹, VRAM 종류·용량, 카드 길이(mm), 권장 파워 용량(W), 16핀 사용 여부, 필요한 PCIe 8핀 개수, 출력 포트.
+power: 정격 출력(W), 16핀 커넥터 유무, PCIe 8핀 커넥터 개수, 80PLUS 인증 등급, 폼팩터(ATX/SFX).
+ssds: 폼팩터, 용량(GB), 연속 읽기·쓰기 속도(MB/s).
+hdds: 인터페이스, 용량(TB), 회전수(RPM), 버퍼 용량(MB).
+monitors: 화면 크기(인치), 해상도, 패널 종류, 주사율(Hz), 화면 비율.
+
+[규격·호환 참조]
+sockets: CPU 소켓 목록(LGA1700, AM4, AM5).
+memory_specs: 메모리 규격 목록(DDR4, DDR5).
+socket_memory_specs: 소켓이 지원하는 메모리 규격.
+chipsets: 칩셋별 소켓, CPU 오버클럭 지원 여부, 지원 CPU TDP 상한.
+cpu_memory_clocks: CPU 가 메모리 규격·슬롯 구성별로 지원하는 최대 클럭.
+warning_rules: 조합 경고 규칙 W1~W5 의 감점과 안내 문구.
+
+[호환 판정 뷰 — 부품 쌍을 그대로 조회할 수 있다]
+v_cpu_board_compat: 소켓이 맞는 CPU-메인보드 쌍.
+v_ram_board_compat: 메인보드에 꽂을 수 있는 램 쌍과 최대 키트 수.
+v_cpu_ram_compat: CPU 가 지원하는 규격의 램 쌍.
+v_gpu_power_compat: 그래픽카드에 충분한 파워 쌍.
+v_cpu_board_warnings: CPU-메인보드 조합의 경고(W4, W5).
+v_cpu_ram_warnings: CPU-램 조합의 경고(W1, W2, W3).
+
+[사용자가 저장한 견적]
+builds: 사용자가 직접 만들어 저장해 둔 PC 견적 1건. 제목, 작성 상태, 부품 칸별 제품 번호.
+  사용자가 이미 저장한 견적을 조회할 때만 쓴다. 새 견적을 만들어 주는 테이블이 아니다.
+build_storages: 저장된 견적에 담은 저장장치와 수량.
+v_build_warnings: 저장된 견적의 경고(W1~W5).
+
+[이 DB 에 없는 것 — 이런 데이터를 요구하는 질문은 조회할 수 없다]
+판매량, 판매 순위, 인기 순위, 베스트셀러
+리뷰, 별점, 평점, 후기, 사용자 평가
+재고, 품절 여부, 입고 예정
+배송, 배송비, 배송 기간
+할인, 쿠폰, 특가, 행사
+가격 변동 이력, 과거 가격, 최저가 추이
+출시일, 출시 연도, 세대 구분
+전력 소비 실측값(그래픽카드는 권장 파워 용량만 있고 실제 소비전력은 없다)
+벤치마크 원본 수치(performance_score 로 환산된 값만 있다)
+타사 가격 비교, 외부 쇼핑몰 정보
