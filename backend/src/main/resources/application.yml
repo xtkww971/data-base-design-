@@ -31,7 +31,9 @@ typesafe:
   connect-timeout: 1s
   read-timeout: 1s
   # 이 값 이상일 때만 거절한다. PoC 실측 후 조정한다.
-  confidence-threshold: 0.7
+  # 1 보다 크게 주면 어떤 판정도 거절하지 않는다. 판정 결과는 로그에 남으므로
+  # 거절을 막아 둔 채로 판정 정확도와 SQL 품질을 한 번에 볼 수 있다.
+  confidence-threshold: ${TYPESAFE_CONFIDENCE_THRESHOLD:0.7}
   # 판정 기준. PoC 때 file:./criteria-v2.yml 처럼 바꿔 끼울 수 있다.
   criteria-location: ${TYPESAFE_CRITERIA_LOCATION:classpath:nl2sql/judge-criteria.yml}
   # 판정 근거로 보낼 스키마 요약. schema_docs.json 이 바뀌면 같이 고쳐야 한다.
