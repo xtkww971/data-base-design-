@@ -19,6 +19,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *                            거절 쪽에만 높은 확신을 요구한다
  * @param criteriaLocation    판정 기준 파일 위치. 스프링 Resource 표기를 쓰므로
  *                            PoC 때 {@code file:./criteria-v2.yml} 처럼 재빌드 없이 갈아끼울 수 있다
+ * @param schemaLocation      판정 근거로 보낼 스키마 요약 파일 위치. 기준 파일과 짝이라 같이 둔다
  */
 @ConfigurationProperties(prefix = "typesafe")
 public record TypeSafeProperties(
@@ -28,7 +29,8 @@ public record TypeSafeProperties(
         Duration connectTimeout,
         Duration readTimeout,
         double confidenceThreshold,
-        String criteriaLocation) {
+        String criteriaLocation,
+        String schemaLocation) {
 
     public boolean hasApiKey() {
         return apiKey != null && !apiKey.isBlank();

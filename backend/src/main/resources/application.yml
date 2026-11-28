@@ -29,11 +29,17 @@ typesafe:
   # 버전을 핀으로 박는다. jev-latest 는 릴리스에 따라 판정이 조용히 바뀐다.
   model: jev-1.14.0
   connect-timeout: 1s
-  read-timeout: 1s
+  # 도커 실측: 커넥션을 새로 맺는 첫 호출 751ms, 재사용 시 236ms.
+  # 1s 로 두면 첫 호출이 타임아웃에 걸리고, fail-open 이라 증상 없이 판정만 사라진다.
+  read-timeout: 3s
   # 이 값 이상일 때만 거절한다. PoC 실측 후 조정한다.
-  confidence-threshold: 0.7
+  # 1 보다 크게 주면 어떤 판정도 거절하지 않는다. 판정 결과는 로그에 남으므로
+  # 거절을 막아 둔 채로 판정 정확도와 SQL 품질을 한 번에 볼 수 있다.
+  confidence-threshold: ${TYPESAFE_CONFIDENCE_THRESHOLD:0.7}
   # 판정 기준. PoC 때 file:./criteria-v2.yml 처럼 바꿔 끼울 수 있다.
   criteria-location: ${TYPESAFE_CRITERIA_LOCATION:classpath:nl2sql/judge-criteria.yml}
+  # 판정 근거로 보낼 스키마 요약. schema_docs.json 이 바뀌면 같이 고쳐야 한다.
+  schema-location: ${TYPESAFE_SCHEMA_LOCATION:classpath:nl2sql/schema-summary.txt}
 
 management:
   endpoints:

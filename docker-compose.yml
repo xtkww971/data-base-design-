@@ -43,6 +43,9 @@ services:
       NL2SQL_BASE_URL: http://nl2sql:8000
       # 질문의 처리 가능 여부 판정용 (ADR 0004). 비어 있으면 판정을 건너뛴다.
       TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
+      # 1 보다 크게 주면 거절하지 않고 판정만 로그에 남긴다. 1차 테스트에서
+      # 판정 정확도와 SQL 품질을 한 번에 보려면 이 값을 1.1 로 둔다.
+      TYPESAFE_CONFIDENCE_THRESHOLD: ${TYPESAFE_CONFIDENCE_THRESHOLD:-0.7}
       TZ: Asia/Seoul
     ports:
       - "${BACKEND_PORT:-8080}:8080"
