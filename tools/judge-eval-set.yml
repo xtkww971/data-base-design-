@@ -1,0 +1,108 @@
+#
+# 처리 가능 여부 판정 평가 세트 (ADR 0004 / 이슈 #29 6단계)
+#
+# expected 는 사람이 매긴 정답이다. borderline: true 는 사람끼리도 갈릴 수 있는 항목으로,
+# 정확도를 두 가지로(전체 / borderline 제외) 계산하기 위한 표시다.
+#
+# source:
+#   few-shot  = nl2sql/data/few_shot_examples.json 의 질문. 생성기가 답하도록 학습된 질문들이다
+#   frontend  = RecommendationPage 가 실제로 만들어 보내는 형태
+#   written   = 이 평가를 위해 새로 쓴 질문
+#
+# 주의: few_shot_examples.json 의 앞 세 개는 ADR-0003 이 적은 것과 달리 answerable 이 아니다.
+# 견적 조합 요청이므로 recommendation 이다.
+#
+
+cases:
+
+  # ---------- answerable: 조회 한 번으로 답할 수 있다 ----------
+  - { question: "배그 할 그래픽카드 60만원 이하로 추천해줘", expected: answerable, source: few-shot }
+  - { question: "롤 할 건데 30만원 이하 CPU 뭐가 좋아?", expected: answerable, source: few-shot }
+  - { question: "가장 저렴한 CPU 5개 알려줘", expected: answerable, source: few-shot }
+  - { question: "내장 그래픽이 있는 CPU 중 20만원 이하 제품 보여줘", expected: answerable, source: few-shot }
+  - { question: "인텔 CPU 중 코어가 가장 많은 제품 3개는?", expected: answerable, source: few-shot }
+  - { question: "클럭이 가장 높은 CPU 3개 알려줘", expected: answerable, source: few-shot }
+  - { question: "TDP 65W 이하인 저전력 CPU를 싼 순서로 보여줘", expected: answerable, source: few-shot }
+  - { question: "오버클럭 가능한 CPU 중 가장 저렴한 3개는?", expected: answerable, source: few-shot }
+  - { question: "i5-13600K는 램 클럭 몇까지 지원해?", expected: answerable, source: few-shot }
+  - { question: "AM5 소켓이면서 DDR5를 지원하는 메인보드를 싼 순서로 보여줘", expected: answerable, source: few-shot }
+  - { question: "라이젠5 7500F랑 호환되는 메인보드 추천해줘", expected: answerable, source: few-shot }
+  - { question: "i5-13600K에 맞는 메인보드를 경고가 적은 순서로 추천해줘", expected: answerable, source: few-shot }
+  - { question: "CPU 오버클럭을 지원하는 메인보드 중 싼 것 5개 보여줘", expected: answerable, source: few-shot }
+  - { question: "그래픽카드 없이 내장 그래픽으로 쓸 수 있는 메인보드 알려줘", expected: answerable, source: few-shot }
+  - { question: "B650 칩셋 메인보드와 호환되는 램을 싼 순서로 보여줘", expected: answerable, source: few-shot }
+  - { question: "라이젠7 7800X3D와 쓸 때 경고 없는 램을 싼 순서로 추천해줘", expected: answerable, source: few-shot }
+  - { question: "DDR5 32GB 램 중 가장 저렴한 3개는?", expected: answerable, source: few-shot }
+  - { question: "VRAM 16GB 이상인 그래픽카드를 가격 낮은 순으로 보여줘", expected: answerable, source: few-shot }
+  - { question: "길이가 300mm 이하인 그래픽카드 알려줘", expected: answerable, source: few-shot }
+  - { question: "그래픽카드 칩셋별 최저가를 보여줘", expected: answerable, source: few-shot }
+  - { question: "RTX 5070에 맞는 파워 추천해줘", expected: answerable, source: few-shot }
+  - { question: "16핀 커넥터가 있는 1000W 이상 파워 알려줘", expected: answerable, source: few-shot }
+  - { question: "정격 출력 750W 이상이고 골드 등급 이상인 파워를 보여줘", expected: answerable, source: few-shot }
+  - { question: "1TB 이상 SSD 중 읽기 속도가 가장 빠른 3개는?", expected: answerable, source: few-shot }
+  - { question: "10만원 이하 M.2 SSD 보여줘", expected: answerable, source: few-shot }
+  - { question: "8TB 이상 HDD 중 가장 저렴한 제품은?", expected: answerable, source: few-shot }
+  - { question: "27인치 이상 QHD 144Hz 이상 모니터 보여줘", expected: answerable, source: few-shot }
+  - { question: "CPU 평균 가격 알려줘", expected: answerable, source: written }
+  - { question: "브랜드별 그래픽카드 개수 세줘", expected: answerable, source: written }
+  - { question: "내가 저장한 견적 보여줘", expected: answerable, source: written,
+      note: "builds 로 조회 가능. 견적 조합 요청과 한 단어 차이라 recommendation 으로 오판할 수 있다" }
+  # 간편 입력에 예산이 붙어 들어오는 형태. 부품 종류가 하나라 조회다.
+  - { question: "그래픽카드 추천해줘", budget_min: 1000000, budget_max: 2000000,
+      expected: answerable, source: frontend }
+  - { question: "가성비 좋은 그래픽카드 추천해줘", expected: answerable, source: few-shot, borderline: true,
+      note: "'가성비'를 가격/성능으로 볼지, 기준이 모호하다고 볼지 갈릴 수 있다" }
+
+  # ---------- recommendation: 여러 부품을 조합해야 한다 ----------
+  # 프론트 주 흐름이 전부 이 형태다. 거절 정책을 정하는 데 가장 중요한 묶음이다.
+  - { question: "300만원 안팎의 예산으로 컴퓨터 견적 맞춰줘.", expected: recommendation, source: frontend,
+      note: "RecommendationPage 의 기본 질문" }
+  - { question: "배틀그라운드 용도로 150만원 이하 예산의 컴퓨터 견적 맞춰줘.", budget_max: 1500000,
+      programs: ["배틀그라운드"], expected: recommendation, source: frontend }
+  - { question: "프리미어 프로 용도로 컴퓨터 견적 맞춰줘.", programs: ["프리미어 프로"],
+      expected: recommendation, source: frontend }
+  - { question: "200만원 예산으로 컴퓨터 견적 맞춰줘.", budget_max: 2000000,
+      expected: recommendation, source: frontend }
+  - { question: "배틀그라운드 할건데 150만원 이하로 견적 맞춰줘", expected: recommendation, source: few-shot }
+  - { question: "프리미어 프로로 영상 편집할 컴퓨터 200만원 안으로 맞춰줘", expected: recommendation, source: few-shot }
+  - { question: "그래픽카드 없이 사무용으로 쓸 80만원짜리 컴퓨터 견적 짜줘", expected: recommendation, source: few-shot }
+  - { question: "게임용 PC 풀세트로 조립해줘", expected: recommendation, source: written }
+
+  # ---------- out_of_scope: PC 부품/쇼핑몰과 무관 ----------
+  - { question: "오늘 날씨 어때?", expected: out_of_scope, source: written }
+  - { question: "지금 몇 시야?", expected: out_of_scope, source: written }
+  - { question: "너는 어떤 모델이야?", expected: out_of_scope, source: written }
+  - { question: "이 문장 영어로 번역해줘", expected: out_of_scope, source: written }
+  - { question: "컴퓨터 조립하는 방법 알려줘", expected: out_of_scope, source: written,
+      note: "PC 를 말하지만 DB 조회로 답할 것이 아니다" }
+  - { question: "윈도우 11 설치하다가 드라이버 오류 나는데 어떻게 고쳐?", expected: out_of_scope, source: written }
+  - { question: "그래픽카드 발열이 심한데 어떻게 잡아?", expected: out_of_scope, source: written }
+
+  # ---------- missing_data: 주제는 맞지만 없는 데이터를 요구 ----------
+  - { question: "가장 많이 팔린 상품 5개는?", expected: missing_data, source: few-shot,
+      note: "main.py 의 테스트 입력이기도 하다" }
+  - { question: "리뷰 평점이 가장 높은 그래픽카드 알려줘", expected: missing_data, source: written }
+  - { question: "요즘 제일 잘 나가는 CPU 뭐야?", expected: missing_data, source: written }
+  - { question: "지금 재고 있는 SSD만 보여줘", expected: missing_data, source: written }
+  - { question: "배송비 무료인 상품 알려줘", expected: missing_data, source: written }
+  - { question: "할인 중인 모니터 보여줘", expected: missing_data, source: written }
+  - { question: "RTX 5070 가격이 지난달보다 얼마나 떨어졌어?", expected: missing_data, source: written }
+  - { question: "2026년에 출시된 CPU 알려줘", expected: missing_data, source: written }
+
+  # ---------- ambiguous: 조건이 모호해 하나의 SQL 로 정할 수 없다 ----------
+  - { question: "좋은 거 추천해줘", expected: ambiguous, source: written }
+  - { question: "아무거나 보여줘", expected: ambiguous, source: written }
+  - { question: "이거 어때?", expected: ambiguous, source: written }
+  - { question: "그거랑 호환되는 거 알려줘", expected: ambiguous, source: written,
+      note: "지시어가 가리키는 대상이 질문 안에 없다" }
+  - { question: "싼 거 알려줘", expected: ambiguous, source: written,
+      note: "부품 종류가 없다. '제일 싼 그래픽카드'는 answerable 이어야 한다" }
+  - { question: "괜찮은 사양으로 해줘", expected: ambiguous, source: written }
+
+  # ---------- 경계 확인용: 거절 쪽으로 쏠리지 않는지 ----------
+  - { question: "제일 싼 그래픽카드", expected: answerable, source: written,
+      note: "조건이 적지만 부품 종류와 정렬 기준이 분명하다. ambiguous 로 가면 오거절" }
+  - { question: "ssd 싼거 머있음", expected: answerable, source: written,
+      note: "구어체와 오타. 표현이 거칠다는 이유로 거절하면 안 된다" }
+  - { question: "모니터 좀 보여줘라", expected: answerable, source: written, note: "반말" }
+  - { question: "16기가 램", expected: answerable, source: written, note: "명사구만 있어도 의도가 읽힌다" }
