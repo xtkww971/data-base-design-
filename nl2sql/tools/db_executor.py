@@ -27,7 +27,7 @@ def validate_sql(generated_query) -> tuple[bool, str]:
     생성된 SQL 질의문이 문법적으로 올바른지,
     존재하는 테이블/컬럼을 참조하는지 검증
     """
-    keywords = ["INSERT","UPDATE","DELETE","DROP"]
+    keywords = ["INSERT","UPDATE","DELETE","DROP","insert","update","delete","drop"]
 
     if not generated_query:
         return False, "쿼리가 생성되지 않았습니다."
