@@ -3,7 +3,6 @@ import {
   CircleQuestionMark,
   CloudOff,
   Database,
-  Layers,
   PencilLine,
   RefreshCw,
   TriangleAlert,
@@ -19,7 +18,7 @@ const CODE_STYLES = {
   NL2SQL_OUT_OF_SCOPE: { tone: 'info', label: '안내', Icon: Ban },
   NL2SQL_MISSING_DATA: { tone: 'info', label: '안내', Icon: Database },
   NL2SQL_AMBIGUOUS: { tone: 'info', label: '안내', Icon: CircleQuestionMark },
-  NL2SQL_RECOMMENDATION: { tone: 'info', label: '안내', Icon: Layers },
+  // 견적 조합 요청(recommendation)은 거절하지 않으므로 코드가 오지 않는다. ADR 0004 참고.
   NL2SQL_GENERATION_FAILED: { tone: 'caution', label: '다시 표현해 주세요', Icon: PencilLine },
   INVALID_INPUT: { tone: 'caution', label: '입력 확인', Icon: PencilLine },
   INVALID_TYPE: { tone: 'caution', label: '입력 확인', Icon: PencilLine },

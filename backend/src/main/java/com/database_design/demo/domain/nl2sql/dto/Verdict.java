@@ -22,7 +22,19 @@ public enum Verdict {
     OUT_OF_SCOPE("out_of_scope", ErrorCode.NL2SQL_OUT_OF_SCOPE),
     MISSING_DATA("missing_data", ErrorCode.NL2SQL_MISSING_DATA),
     AMBIGUOUS("ambiguous", ErrorCode.NL2SQL_AMBIGUOUS),
-    RECOMMENDATION("recommendation", ErrorCode.NL2SQL_RECOMMENDATION);
+
+    /**
+     * 여러 부품을 조합해 PC 한 대를 구성해 달라는 요청.
+     *
+     * <p><b>거절하지 않는다.</b> 추천 견적은 지원해야 하는 기능이고, 추천 견적 페이지는
+     * 간편 입력을 항상 이 형태의 질문으로 조립한다. 거절하면 그 페이지의 주 흐름이 막힌다.
+     * few_shot_examples.json 도 견적 요청에 답하도록 예시를 들고 있고,
+     * schema_docs.json 의 호환 뷰 설명도 견적을 맞출 때 쓰라고 안내한다.
+     *
+     * <p>판정은 그대로 받아 로그에 남긴다. 어떤 질문이 견적 요청으로 들어오는지 관찰하는 데
+     * 쓰고, 거절은 하지 않는다.
+     */
+    RECOMMENDATION("recommendation", null);
 
     private final String key;
     private final ErrorCode errorCode;
@@ -42,10 +54,19 @@ public enum Verdict {
 
     /**
      * 사용자에게 보여 줄 안내 문구를 담은 에러 코드. Jev 는 이유 문장을 생성하지 않으므로
-     * 판정별로 고정된 문구를 쓴다. ANSWERABLE 은 거절하지 않으므로 비어 있다.
+     * 판정별로 고정된 문구를 쓴다.
+     *
+     * <p>비어 있으면 그 판정으로는 거절하지 않는다는 뜻이다. 보여 줄 문구가 없다는 것과
+     * 거절하지 않는다는 것이 같은 사실이라 따로 두지 않는다. ANSWERABLE 과 RECOMMENDATION
+     * 이 여기에 해당한다.
      */
     public Optional<ErrorCode> errorCode() {
         return Optional.ofNullable(errorCode);
+    }
+
+    /** 이 판정으로 거절할 수 있는지. 보여 줄 안내 문구가 있는 판정만 거절한다. */
+    public boolean rejectable() {
+        return errorCode != null;
     }
 
     /**
