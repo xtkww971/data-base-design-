@@ -119,12 +119,30 @@ ADR-0003의 표를 그대로 집행한다.
 | 판정 | 처리 |
 | --- | --- |
 | `answerable` | `Nl2SqlClient.generate()` 로 진행 |
-| 그 외 + `confidence ≥ 0.7` | `BusinessException(NL2SQL_UNANSWERABLE)`. nl2sql 호출 안 함 |
-| 그 외 + `confidence < 0.7` | 거절하지 않고 진행 |
-| 호출 실패·타임아웃(1초)·키 없음 | 판정 없이 진행 (fail-open) |
+| `recommendation` | **거절하지 않고 진행.** 판정만 로그에 남긴다 |
+| `out_of_scope` / `missing_data` / `ambiguous` + `confidence ≥ 0.7` | 판정별 `ErrorCode` 로 거절. nl2sql 호출 안 함 |
+| 위 3종 + `confidence < 0.7` | 거절하지 않고 진행 |
+| 호출 실패·타임아웃·키 없음 | 판정 없이 진행 (fail-open) |
 
 거절할 때만 높은 확신을 요구한다. **오거절이 이 기능의 가장 큰 위험**이기 때문이다.
 0.7은 시작값이고 ADR-0003의 PoC 결과로 조정한다. 임계값은 설정값으로 둬서 재배포 없이 바꾼다.
+
+### `recommendation` 은 거절하지 않는다
+
+ADR-0003은 `recommendation`을 거절 대상에 넣었다. **이 결정을 뒤집는다.**
+
+- 추천 견적은 지원해야 하는 기능이다. 추천 견적 페이지는 간편 입력을 **항상**
+  `"…용도로 … 예산의 컴퓨터 견적 맞춰줘."` 형태로 조립한다. 거절하면 그 페이지의 주 흐름이 막힌다.
+- `few_shot_examples.json`의 앞 세 개가 견적 요청이다. 생성기는 이미 견적에 답하도록 예시를 들고 있다.
+  ADR-0003이 "few-shot 질문은 전부 `answerable`"이라고 적은 전제는 틀렸다.
+- `schema_docs.json`의 호환 뷰(`v_cpu_board_compat` 등) 설명이 "PC 견적을 추천하거나 맞출 때
+  이 뷰로 고른다"로 바뀌었다(`d07db1d`). 스키마 쪽은 견적을 **지원하는** 방향으로 가고 있다.
+
+거절하지 않되 **판정은 받아서 로그에 남긴다.** 어떤 질문이 견적 요청으로 들어오는지 관찰하는 데 쓴다.
+
+구현에서는 판정에 안내 문구가 있는지로 거절 대상을 가린다(`Verdict.rejectable()`).
+보여 줄 문구가 없다는 것과 거절하지 않는다는 것이 같은 사실이라 플래그를 따로 두지 않는다.
+`NL2SQL_RECOMMENDATION` 에러 코드는 지웠다.
 
 ### 응답 계약
 
@@ -140,7 +158,8 @@ ADR-0003의 표를 그대로 집행한다.
   | `out_of_scope` | "PC 부품 정보에 대해서만 답할 수 있어요." |
   | `missing_data` | "판매·리뷰 정보는 아직 제공하지 않아요." |
   | `ambiguous` | "조건을 조금 더 구체적으로 알려주세요." |
-  | `recommendation` | "견적 조합 추천은 아직 준비 중이에요. 부품별로 찾아보시겠어요?" |
+
+  `answerable` 과 `recommendation` 은 거절하지 않으므로 문구가 없다.
 
 * `NlQueryResponse`는 **바꾸지 않는다.** 거절은 성공 응답이 아니라 예외 경로다.
 * 판정으로 걸린 질문은 `NlQueryStatus.UNANSWERABLE`로 기록한다. 이미 있던 값에 처음으로 쓰임이 생긴다.

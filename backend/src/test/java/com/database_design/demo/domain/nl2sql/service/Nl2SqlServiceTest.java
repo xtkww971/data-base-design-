@@ -56,8 +56,7 @@ class Nl2SqlServiceTest {
     @CsvSource({
             "OUT_OF_SCOPE, NL2SQL_OUT_OF_SCOPE",
             "MISSING_DATA, NL2SQL_MISSING_DATA",
-            "AMBIGUOUS, NL2SQL_AMBIGUOUS",
-            "RECOMMENDATION, NL2SQL_RECOMMENDATION"
+            "AMBIGUOUS, NL2SQL_AMBIGUOUS"
     })
     void rejectsWithVerdictSpecificErrorCode(Verdict verdict, ErrorCode expected) {
         when(judgeClient.judge(any())).thenReturn(JudgeResult.of(verdict, 0.91));
@@ -80,6 +79,33 @@ class Nl2SqlServiceTest {
                 .hasMessage(ErrorCode.NL2SQL_MISSING_DATA.getMessage());
         assertThat(ErrorCode.NL2SQL_MISSING_DATA.getMessage())
                 .isNotEqualTo(ErrorCode.NL2SQL_OUT_OF_SCOPE.getMessage());
+    }
+
+    @Test
+    @DisplayName("recommendation 은 확신도가 높아도 거절하지 않고 생성 단계로 넘긴다")
+    void neverRejectsRecommendation() {
+        // 추천 견적은 지원해야 하는 기능이다. 추천 견적 페이지가 간편 입력을 항상 이 형태의
+        // 질문으로 조립하므로, 거절하면 그 페이지의 주 흐름이 막힌다.
+        when(judgeClient.judge(any())).thenReturn(JudgeResult.of(Verdict.RECOMMENDATION, 1.0));
+        givenGenerationFails();
+
+        NlQueryRequest request = new NlQueryRequest("300만원 안팎의 예산으로 컴퓨터 견적 맞춰줘.");
+        assertThatThrownBy(() -> service.query(request))
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.NL2SQL_GENERATION_FAILED);
+
+        // 생성까지 갔다는 것이 핵심이다. 거절했다면 nl2sql 을 거치지 않는다.
+        verify(nl2SqlClient).generate(request);
+    }
+
+    @Test
+    @DisplayName("거절 대상 판정은 안내 문구를 가진 것뿐이다")
+    void onlyVerdictsWithMessageAreRejectable() {
+        assertThat(Verdict.ANSWERABLE.rejectable()).isFalse();
+        assertThat(Verdict.RECOMMENDATION.rejectable()).isFalse();
+        assertThat(Verdict.OUT_OF_SCOPE.rejectable()).isTrue();
+        assertThat(Verdict.MISSING_DATA.rejectable()).isTrue();
+        assertThat(Verdict.AMBIGUOUS.rejectable()).isTrue();
     }
 
     @Test

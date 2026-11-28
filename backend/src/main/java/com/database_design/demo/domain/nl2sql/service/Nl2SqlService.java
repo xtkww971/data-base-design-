@@ -99,9 +99,9 @@ public class Nl2SqlService {
             return;
         }
 
+        // shouldReject 가 rejectable 판정만 통과시키므로 문구는 항상 있다.
         Optional<ErrorCode> errorCode = judged.verdict().errorCode();
         if (errorCode.isEmpty()) {
-            // 거절 판정에는 항상 문구가 붙어 있어야 한다. 없으면 보여 줄 말이 없으므로 거절하지 않는다.
             log.warn("안내 문구가 없는 판정이라 거절하지 않습니다. verdict={}", judged.verdict().key());
             return;
         }

@@ -28,12 +28,16 @@ public record JudgeResult(Verdict verdict, double confidence, boolean skipped) {
     /**
      * 거절해야 하는지 판단한다.
      *
-     * <p>판정이 {@code answerable} 이 아니고 확신도가 임계값 이상일 때만 거절한다.
+     * <p>거절할 수 있는 판정이고 확신도가 임계값 이상일 때만 거절한다.
      * 오거절이 이 기능의 가장 큰 위험이므로 거절 쪽에만 높은 확신을 요구한다.
      * 확신이 낮으면 거절하지 않고 생성해 본다.
+     *
+     * <p>{@code answerable} 과 {@code recommendation} 은 거절 대상이 아니다
+     * ({@link Verdict#rejectable()}). 특히 추천 견적은 지원해야 하는 기능이라
+     * 판정만 받고 생성으로 넘긴다.
      */
     public boolean shouldReject(double confidenceThreshold) {
-        return !skipped && !verdict.isAnswerable() && confidence >= confidenceThreshold;
+        return !skipped && verdict.rejectable() && confidence >= confidenceThreshold;
     }
 
     /** nl_queries.verdict_confidence 가 DECIMAL(4,3) 이라 소수 세 자리로 맞춘다. */

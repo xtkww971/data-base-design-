@@ -56,8 +56,8 @@ public enum ErrorCode {
     // 서버 잘못이 아니고 질문이 범위 밖이므로 GENERATION_FAILED 와 같은 422 를 쓴다.
     NL2SQL_OUT_OF_SCOPE(HttpStatus.UNPROCESSABLE_CONTENT, "PC 부품 정보에 대해서만 답할 수 있어요."),
     NL2SQL_MISSING_DATA(HttpStatus.UNPROCESSABLE_CONTENT, "판매·리뷰 정보는 아직 제공하지 않아요."),
-    NL2SQL_AMBIGUOUS(HttpStatus.UNPROCESSABLE_CONTENT, "조건을 조금 더 구체적으로 알려주세요."),
-    NL2SQL_RECOMMENDATION(HttpStatus.UNPROCESSABLE_CONTENT, "견적 조합 추천은 아직 준비 중이에요. 부품별로 찾아보시겠어요?");
+    // 견적 조합 요청(recommendation)은 거절하지 않으므로 코드가 없다. Verdict.RECOMMENDATION 참고.
+    NL2SQL_AMBIGUOUS(HttpStatus.UNPROCESSABLE_CONTENT, "조건을 조금 더 구체적으로 알려주세요.");
 
     private final HttpStatus status;
     private final String message;
