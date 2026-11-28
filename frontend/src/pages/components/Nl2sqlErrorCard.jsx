@@ -4,13 +4,9 @@ import {
   CloudOff,
   Database,
   PencilLine,
-  RefreshCw,
   TriangleAlert,
 } from 'lucide-react';
 import './Nl2sqlErrorCard.css';
-
-// historyStore 가 로딩 중 새로고침으로 끊긴 요청에 넣는 문구. code 가 없어서 문구로 구분한다.
-const INTERRUPTED_MESSAGE = '페이지를 새로고침해 결과를 받지 못했습니다. 다시 시도해 주세요.';
 
 // 백엔드 ErrorCode 별 톤과 머리말. 422 가 여러 종이라 HTTP 상태가 아니라 code 로 고른다.
 // info 는 Jev 판정 거절(ADR 0004)이다. 에러가 아니라 안내이므로 code 태그를 숨긴다.
@@ -33,11 +29,8 @@ const UNKNOWN_CODE_STYLE = { tone: 'error', label: '오류', Icon: TriangleAlert
  * errorCode 는 historyStore 가 붙인 "CODE · status" 형태다.
  * 서버에 닿지 못했으면 null, 응답 본문에 code 가 없으면 상태만("502") 들어온다.
  */
-function resolveCard(message, errorCode) {
+function resolveCard(errorCode) {
   if (!errorCode) {
-    if (message === INTERRUPTED_MESSAGE) {
-      return { tone: 'neutral', label: '요청 중단', Icon: RefreshCw, tag: 'code 없음' };
-    }
     return { tone: 'error', label: '연결 실패', Icon: CloudOff, tag: 'code 없음' };
   }
 
@@ -54,7 +47,7 @@ function resolveCard(message, errorCode) {
  * 판정 거절 문구는 서버가 판정별로 고정해 보내므로 프런트에 따로 두지 않는다.
  */
 export default function Nl2sqlErrorCard({ message, errorCode }) {
-  const { tone, label, Icon, tag } = resolveCard(message, errorCode);
+  const { tone, label, Icon, tag } = resolveCard(errorCode);
 
   return (
     <div className={`nl2sql-error-card nl2sql-error-card--${tone}`} role="alert">

@@ -718,7 +718,7 @@ export default function RecommendationPage() {
                   <Link to="/login" state={{ from: '/recommendation' }}>
                     로그인
                   </Link>
-                  하면 질문 내역이 계정에 저장돼 다른 기기에서도 볼 수 있어요.
+                  하면 질문 내역이 계정에 저장돼요. 로그인하지 않으면 새로고침할 때 사라져요.
                 </p>
               ) : null}
 

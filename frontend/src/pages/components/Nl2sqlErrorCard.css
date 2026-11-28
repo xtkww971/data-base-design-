@@ -38,12 +38,6 @@
   --tone-fg: #fca5a5;
 }
 
-/* 새로고침으로 끊긴 요청 */
-.nl2sql-error-card--neutral {
-  --tone-rgb: 148, 163, 184;
-  --tone-fg: #cbd5e1;
-}
-
 .nl2sql-error-card__icon {
   flex-shrink: 0;
   display: flex;

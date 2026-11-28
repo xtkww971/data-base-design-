@@ -4,7 +4,8 @@ import { deleteQuery, fetchQueryDetail, fetchQueryHistory, queryNl2Sql } from '.
 // 추천 페이지의 질문 내역. 분석 중에 다른 페이지로 가도 응답이 이 저장소에 들어오도록 컴포넌트 밖에 둔다.
 //
 // - 로그인: 내역은 서버(nl_queries)에 있다. 목록은 GET /api/nl2sql/queries 로 받고, 결과는 항목을 고를 때 받는다.
-// - 비로그인: 서버에도 남지만(user_id NULL) 다시 꺼낼 방법이 없으므로 지금처럼 localStorage 에 둔다.
+// - 비로그인: 서버에는 남지만(user_id NULL) 다시 꺼낼 방법이 없다. 이번 방문에서 한 질문만 메모리에 두고,
+//   새로고침하면 사라진다. 브라우저(localStorage)에는 내역을 저장하지 않는다.
 //
 // 항목: {
 //   id,            화면용 키. 서버에 있으면 `q-<queryId>`, 아직 없으면 임시 id
@@ -16,9 +17,15 @@ import { deleteQuery, fetchQueryDetail, fetchQueryHistory, queryNl2Sql } from '.
 //   detailStatus,  stub 의 결과를 받는 중인지. 'idle' | 'loading' | 'error'
 // }
 
-const STORAGE_KEY = 'recommendationHistory';
-const MAX_LOCAL_ENTRIES = 20;
 const listeners = new Set();
+
+// 예전에 질문 내역을 localStorage 에 두던 키. 내역을 서버로 옮겼으므로 남아 있는 값을 지운다.
+const LEGACY_STORAGE_KEY = 'recommendationHistory';
+try {
+  localStorage.removeItem(LEGACY_STORAGE_KEY);
+} catch {
+  // 저장소를 못 쓰는 환경이면 지울 것도 없다.
+}
 
 // 서버가 내역에 남기는 실패 코드와 그 결과 종류. 여기에 없는 실패(서버 연결 실패 등)는 서버에 남지 않는다.
 const OUTCOME_BY_CODE = {
@@ -33,42 +40,13 @@ let state = {
   userId: undefined, // 아직 setHistoryUser 전
   entries: [],
   selectedId: null,
-  listStatus: 'idle', // 'idle' | 'local' | 'loading' | 'ready' | 'error'
+  listStatus: 'idle', // 'idle' | 'session'(비로그인) | 'loading' | 'ready' | 'error'
   listError: null,
   notice: null,
 };
 
-function isLocalMode() {
-  return state.userId === null;
-}
-
-function readLocalEntries() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map((entry) => {
-      // 새로고침 전에 끝나지 않은 요청은 응답을 받을 수 없다.
-      const restored =
-        entry.status === 'loading'
-          ? { ...entry, status: 'error', error: '페이지를 새로고침해 결과를 받지 못했습니다. 다시 시도해 주세요.' }
-          : entry;
-      return { queryId: null, detailStatus: 'idle', ...restored, outcome: outcomeOf(restored) };
-    });
-  } catch {
-    return [];
-  }
-}
-
 function setState(patch) {
   state = { ...state, ...patch };
-  if (isLocalMode()) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries.slice(0, MAX_LOCAL_ENTRIES)));
-    } catch {
-      // 저장소를 못 쓰는 환경이면 새로고침 전까지만 유지한다.
-    }
-  }
   listeners.forEach((listener) => listener());
 }
 
@@ -84,12 +62,6 @@ function formatErrorCode(error) {
 
 function codeOf(errorCode) {
   return errorCode ? errorCode.split(' · ')[0] : null;
-}
-
-function outcomeOf(entry) {
-  if (entry.status === 'done') return 'SUCCESS';
-  if (entry.status === 'error') return OUTCOME_BY_CODE[codeOf(entry.errorCode)] ?? null;
-  return entry.outcome ?? null;
 }
 
 const pad = (value) => String(value).padStart(2, '0');
@@ -121,14 +93,18 @@ export function setHistoryUser(userId) {
   if (state.userId === userId) {
     return;
   }
-  if (userId === null) {
-    state = { ...state, userId: null };
-    setState({ entries: readLocalEntries(), selectedId: null, listStatus: 'local', listError: null, notice: null });
-    return;
+  // 유저가 바뀌면 이전 유저의 항목을 보이지 않게 비운다. 비로그인은 이번 방문의 질문만 메모리에 쌓는다.
+  setState({
+    userId,
+    entries: [],
+    selectedId: null,
+    listStatus: userId === null ? 'session' : 'loading',
+    listError: null,
+    notice: null,
+  });
+  if (userId !== null) {
+    refreshHistory();
   }
-  state = { ...state, userId };
-  setState({ entries: [], selectedId: null, listStatus: 'loading', listError: null, notice: null });
-  refreshHistory();
 }
 
 /**
@@ -207,8 +183,7 @@ export function submitQuestion(prompt, conditions = null) {
     detailStatus: 'idle',
   };
 
-  const entries = [entry, ...state.entries];
-  setState({ entries: isLocalMode() ? entries.slice(0, MAX_LOCAL_ENTRIES) : entries, selectedId: localId, notice: null });
+  setState({ entries: [entry, ...state.entries], selectedId: localId, notice: null });
 
   queryNl2Sql(prompt, conditions, userId)
     .then((result) => {
