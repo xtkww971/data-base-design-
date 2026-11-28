@@ -38,9 +38,7 @@ build/
 target/
 
 ### vector DB
-# nl2sql 의 chroma 데이터. data/*.json 으로 기동 시 자동 생성된다(init_vector_db_if_need).
-# 컨테이너가 이 경로를 직접 마운트해서, 커밋해 두면 실행만 해도 바이너리가 더럽혀진다.
-nl2sql/vectordb/
+# nl2sql/vectordb/ 의 chroma 데이터는 원격에서 함께 트래킹한다.
 # 예전 마운트 경로(docker-compose 에서 ./nl2sql/vectordb 로 수정됨)가 남긴 잔재
 /vectordb/
 
