@@ -22,6 +22,19 @@ nl2sql:
   connect-timeout: 3s
   read-timeout: 60s
 
+# 질문의 처리 가능 여부 판정 (ADR 0004). api-key 가 비어 있으면 판정을 건너뛴다.
+typesafe:
+  api-key: ${TYPESAFE_API_KEY:}
+  base-url: https://api.typesafe.ai
+  # 버전을 핀으로 박는다. jev-latest 는 릴리스에 따라 판정이 조용히 바뀐다.
+  model: jev-1.14.0
+  connect-timeout: 1s
+  read-timeout: 1s
+  # 이 값 이상일 때만 거절한다. PoC 실측 후 조정한다.
+  confidence-threshold: 0.7
+  # 판정 기준. PoC 때 file:./criteria-v2.yml 처럼 바꿔 끼울 수 있다.
+  criteria-location: ${TYPESAFE_CRITERIA_LOCATION:classpath:nl2sql/judge-criteria.yml}
+
 management:
   endpoints:
     web:
